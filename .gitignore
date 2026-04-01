@@ -1,5 +1,8 @@
 HELP.md
 target/
+
+# 로컬 H2 파일 DB (재시작 후 유지)
+/data/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
