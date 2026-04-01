@@ -2,8 +2,8 @@ package com.rookies5.intreview.controller;
 
 import com.rookies5.intreview.dto.response.ApiResponse;
 import com.rookies5.intreview.dto.response.UserResponse;
-import com.rookies5.intreview.exception.InvalidUserIdHeaderException;
 import com.rookies5.intreview.service.UserService;
+import com.rookies5.intreview.web.UserIdHeader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,15 +22,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserResponse>> me(
             @RequestHeader(value = "X-User-Id", required = false) String userIdHeader
     ) {
-        if (userIdHeader == null || userIdHeader.isBlank()) {
-            return ResponseEntity.badRequest().body(ApiResponse.fail("USER_ID_REQUIRED", "X-User-Id 헤더가 필요합니다."));
-        }
-        long userId;
-        try {
-            userId = Long.parseLong(userIdHeader.trim());
-        } catch (NumberFormatException e) {
-            throw new InvalidUserIdHeaderException();
-        }
+        long userId = UserIdHeader.parseRequired(userIdHeader);
         UserResponse data = userService.getMe(userId);
         return ResponseEntity.ok(ApiResponse.ok(data, "내 정보 조회에 성공했습니다."));
     }

@@ -49,4 +49,28 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.fail("VALIDATION_ERROR", message));
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> illegalArgument(IllegalArgumentException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.fail("VALIDATION_ERROR", e.getMessage()));
+    }
+
+    @ExceptionHandler(QuestionBankNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> questionBankNotFound(QuestionBankNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.fail("QUESTION_BANK_NOT_FOUND", e.getMessage()));
+    }
+
+    @ExceptionHandler(ResourceAccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> accessDenied(ResourceAccessDeniedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.fail("ACCESS_DENIED", e.getMessage()));
+    }
+
+    @ExceptionHandler(ArchivedQuestionNotEditableException.class)
+    public ResponseEntity<ApiResponse<Void>> archivedNotEditable(ArchivedQuestionNotEditableException e) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(ApiResponse.fail("ARCHIVED_QUESTION_NOT_EDITABLE", e.getMessage()));
+    }
 }
