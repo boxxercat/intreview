@@ -292,6 +292,10 @@ X-User-Id: 1
         "id": 10,
         "questionText": "자기소개를 해 주세요.",
         "sourceType": "MANUAL",
+<<<<<<< HEAD
+=======
+        "difficulty": "NORMAL",
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
         "archived": false,
         "createdAt": "2026-04-01T09:00:00Z"
       }
@@ -330,7 +334,12 @@ X-User-Id: 1
 ```json
 {
   "questionText": "프로젝트에서 가장 어려웠던 점은 무엇인가요?",
+<<<<<<< HEAD
   "sourceType": "MANUAL"
+=======
+  "sourceType": "MANUAL",
+  "difficulty": "NORMAL"
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
 }
 ```
 
@@ -347,6 +356,10 @@ X-User-Id: 1
 ```json
 {
   "questionText": "수정된 질문 텍스트",
+<<<<<<< HEAD
+=======
+  "difficulty": "HARD",
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
   "archived": false
 }
 ```
@@ -386,8 +399,12 @@ X-User-Id: 1
 ```json
 {
   "sourceType": "FROM_BANK",
+<<<<<<< HEAD
   "questionBankQuestionId": 10,
   "practiceAnswer": "예상 답변 초안"
+=======
+  "questionBankQuestionId": 10
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
 }
 ```
 
@@ -396,8 +413,12 @@ X-User-Id: 1
 ```json
 {
   "sourceType": "CUSTOM",
+<<<<<<< HEAD
   "questionTextSnapshot": "직접 작성한 준비 질문",
   "practiceAnswer": "연습용 답변"
+=======
+  "questionTextSnapshot": "직접 작성한 준비 질문"
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
 }
 ```
 
@@ -405,7 +426,10 @@ X-User-Id: 1
 
 - `FROM_BANK`일 때 `questionBankQuestionId` 필수, 서버가 스냅샷 생성
 - `CUSTOM`일 때 `questionTextSnapshot` 필수
+<<<<<<< HEAD
 - `practiceAnswer`는 선택 입력이며, 준비 질문에 대한 연습 답변을 저장한다
+=======
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
 
 **Response (201 Created)**
 
@@ -423,8 +447,12 @@ X-User-Id: 1
 
 ```json
 {
+<<<<<<< HEAD
   "questionTextSnapshot": "수정된 스냅샷 텍스트",
   "practiceAnswer": "수정된 연습 답변"
+=======
+  "questionTextSnapshot": "수정된 스냅샷 텍스트"
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
 }
 ```
 

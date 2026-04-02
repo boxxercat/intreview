@@ -188,20 +188,39 @@ public class QuestionBankQuestion extends BaseEntity {
   @Column(name = "source_type", nullable = false, length = 30)
   private QuestionAssetSourceType sourceType;
 
+<<<<<<< HEAD
+=======
+  @Enumerated(EnumType.STRING)
+  @Column(name = "difficulty", nullable = false, length = 20)
+  private QuestionDifficulty difficulty;
+
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
   @Column(name = "archived", nullable = false)
   private boolean archived;
 
   protected QuestionBankQuestion() {}
 
+<<<<<<< HEAD
   private QuestionBankQuestion(User owner, String questionText, QuestionAssetSourceType sourceType) {
     this.owner = owner;
     this.questionText = questionText;
     this.sourceType = sourceType;
+=======
+  private QuestionBankQuestion(User owner, String questionText, QuestionAssetSourceType sourceType, QuestionDifficulty difficulty) {
+    this.owner = owner;
+    this.questionText = questionText;
+    this.sourceType = sourceType;
+    this.difficulty = difficulty;
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
     this.archived = false;
   }
 
   public static QuestionBankQuestion create(User owner, String questionText, QuestionAssetSourceType sourceType) {
+<<<<<<< HEAD
     return new QuestionBankQuestion(owner, questionText, sourceType);
+=======
+    return new QuestionBankQuestion(owner, questionText, sourceType, QuestionDifficulty.NORMAL);
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
   }
 
   public void archive() {
@@ -216,6 +235,10 @@ public class QuestionBankQuestion extends BaseEntity {
 | `owner` | `User` | `owner_id` | `NOT NULL` | 질문 자산 소유자 | 사용자별 자산 분리 |
 | `questionText` | `String` | `question_text` | `NOT NULL`, `length<=4000` | 질문 내용 | 스냅샷/복제 대비 원본 역할 |
 | `sourceType` | `QuestionAssetSourceType` | `source_type` | `NOT NULL` | 생성 출처 | 직접/면접 복사 구분 |
+<<<<<<< HEAD
+=======
+| `difficulty` | `QuestionDifficulty` | `difficulty` | `NOT NULL` | 난이도 | MVP는 `NORMAL` 기본 |
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
 | `archived` | `boolean` | `archived` | `NOT NULL` | 비활성화 | 삭제 대신 보관(선택) |
 
 #### 4.2.3 연관관계 매핑
@@ -367,42 +390,67 @@ public class PreparationQuestion extends BaseEntity {
   @Column(name = "question_text_snapshot", nullable = false, length = 4000)
   private String questionTextSnapshot;
 
+<<<<<<< HEAD
   @Column(name = "practice_answer", length = 8000)
   private String practiceAnswer;
 
+=======
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
   protected PreparationQuestion() {}
 
   private PreparationQuestion(
     User owner,
     QuestionBankQuestion questionBankQuestion,
     PreparationQuestionSourceType sourceType,
+<<<<<<< HEAD
     String questionTextSnapshot,
     String practiceAnswer
+=======
+    String questionTextSnapshot
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
   ) {
     this.owner = owner;
     this.questionBankQuestion = questionBankQuestion;
     this.sourceType = sourceType;
     this.questionTextSnapshot = questionTextSnapshot;
+<<<<<<< HEAD
     this.practiceAnswer = practiceAnswer;
   }
 
   public static PreparationQuestion fromBank(User owner, QuestionBankQuestion asset, String practiceAnswer) {
+=======
+  }
+
+  public static PreparationQuestion fromBank(User owner, QuestionBankQuestion asset) {
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
     return new PreparationQuestion(
       owner,
       asset,
       PreparationQuestionSourceType.FROM_BANK,
+<<<<<<< HEAD
       asset.getQuestionText(),
       practiceAnswer
     );
   }
 
   public static PreparationQuestion fromCustom(User owner, String customText, String practiceAnswer) {
+=======
+      asset.getQuestionText()
+    );
+  }
+
+  public static PreparationQuestion fromCustom(User owner, String customText) {
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
     return new PreparationQuestion(
       owner,
       null,
       PreparationQuestionSourceType.CUSTOM,
+<<<<<<< HEAD
       customText,
       practiceAnswer
+=======
+      customText
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
     );
   }
 
@@ -410,11 +458,14 @@ public class PreparationQuestion extends BaseEntity {
     if (newSnapshot == null || newSnapshot.isBlank()) throw new IllegalArgumentException("questionTextSnapshot is blank");
     this.questionTextSnapshot = newSnapshot;
   }
+<<<<<<< HEAD
 
   public void updatePracticeAnswer(String newAnswer) {
     if (newAnswer == null || newAnswer.isBlank()) throw new IllegalArgumentException("practiceAnswer is blank");
     this.practiceAnswer = newAnswer;
   }
+=======
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
 }
 ```
 
@@ -425,7 +476,10 @@ public class PreparationQuestion extends BaseEntity {
 | `questionBankQuestion` | `QuestionBankQuestion` | `question_bank_question_id` | `NULL 허용` | 자산 참조(선택) | sourceType=FROM_BANK일 때만 존재 |
 | `sourceType` | `PreparationQuestionSourceType` | `source_type` | `NOT NULL` | 질문 출처 | FROM_BANK 또는 CUSTOM |
 | `questionTextSnapshot` | `String` | `question_text_snapshot` | `NOT NULL` | 스냅샷 | 원본 변경과 독립성 유지 |
+<<<<<<< HEAD
 | `practiceAnswer` | `String` | `practice_answer` | `NULL 허용`, `length<=8000` | 연습 답변 | 준비 질문별 답변 초안 저장 |
+=======
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
 
 #### 4.4.3 연관관계 매핑
 ```java
@@ -444,11 +498,14 @@ public void updateQuestionTextSnapshot(String newSnapshot) {
   if (newSnapshot == null || newSnapshot.isBlank()) throw new IllegalArgumentException("questionTextSnapshot is blank");
   this.questionTextSnapshot = newSnapshot;
 }
+<<<<<<< HEAD
 
 public void updatePracticeAnswer(String newAnswer) {
   if (newAnswer == null || newAnswer.isBlank()) throw new IllegalArgumentException("practiceAnswer is blank");
   this.practiceAnswer = newAnswer;
 }
+=======
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
 ```
 
 > 무결성(예: FROM_BANK면 `questionBankQuestion` null 금지)은 생성 메서드에서 강제하고, 추가 검증은 서비스 레이어에서 수행한다.
@@ -666,7 +723,22 @@ public enum QuestionAssetSourceType {
 
 - 상태 설명: Question Bank 자산이 어떤 경로로 생성되었는지 추적한다.
 
+<<<<<<< HEAD
 ### 5.5 PreparationQuestionSourceType
+=======
+### 5.5 QuestionDifficulty
+```java
+public enum QuestionDifficulty {
+  EASY,
+  NORMAL,
+  HARD
+}
+```
+
+- 상태 설명: 난이도 필드(선택). 추후 추천/통계에 활용 가능.
+
+### 5.6 PreparationQuestionSourceType
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
 ```java
 public enum PreparationQuestionSourceType {
   FROM_BANK,
@@ -676,7 +748,11 @@ public enum PreparationQuestionSourceType {
 
 - 상태 설명: 준비 질문의 출처 구분.
 
+<<<<<<< HEAD
 ### 5.6 InterviewQuestionSourceType
+=======
+### 5.7 InterviewQuestionSourceType
+>>>>>>> b08cc8d453cc8b2581f1270ee662d3a1e2aab927
 ```java
 public enum InterviewQuestionSourceType {
   FROM_PREPARATION,
