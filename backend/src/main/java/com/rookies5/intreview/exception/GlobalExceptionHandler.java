@@ -68,6 +68,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(PreparationQuestionNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> preparationQuestionNotFound(PreparationQuestionNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ApiResponse.fail("PREPARATION_QUESTION_NOT_FOUND", e.getMessage()));
     }
 
@@ -90,6 +91,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ResourceAccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> accessDenied(ResourceAccessDeniedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.fail("ACCESS_DENIED", e.getMessage()));
     }
 
