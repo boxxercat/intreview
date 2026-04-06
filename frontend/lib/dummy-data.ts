@@ -82,9 +82,3 @@ export const interviewDetailsById: Record<string, InterviewDetail> = {
     ],
   },
 }
-
-export const initialQuestionBankItems = [
-  { id: "qb1", text: "가장 자신 있는 프로젝트를 소개해 주세요." },
-  { id: "qb2", text: "실패에서 배운 점을 말해 보세요." },
-  { id: "qb3", text: "5년 후 커리어 목표는 무엇인가요?" },
-]
