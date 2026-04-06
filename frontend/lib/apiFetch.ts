@@ -1,4 +1,16 @@
-const BASE_URL = "http://localhost:8080/api"
+/**
+ * 비우면 브라우저에서 상대 경로 `/api/...`로 요청 → Next rewrites로 백엔드 프록시(CORS 회피).
+ * 절대 URL을 주면 해당 호스트로 직접 요청(백엔드 CORS 필요).
+ */
+function getApiBaseUrl(): string {
+  const raw = process.env.NEXT_PUBLIC_API_BASE_URL?.trim()
+  if (raw) return raw.replace(/\/$/, "")
+  if (typeof window !== "undefined") return ""
+  return (
+    process.env.API_URL_SERVER?.trim().replace(/\/$/, "") ??
+    "http://localhost:8080/api"
+  )
+}
 
 export type ApiFetchMethod = "GET" | "POST" | "PATCH" | "DELETE"
 
@@ -20,7 +32,11 @@ function buildUrl(path: string): string {
     return path
   }
   const normalized = path.startsWith("/") ? path : `/${path}`
-  return `${BASE_URL}${normalized}`
+  const base = getApiBaseUrl()
+  if (base === "") {
+    return normalized.startsWith("/api") ? normalized : `/api${normalized}`
+  }
+  return `${base}${normalized}`
 }
 
 function getUserIdFromStorage(): string | null {
@@ -28,22 +44,51 @@ function getUserIdFromStorage(): string | null {
   return localStorage.getItem("userId")
 }
 
+type ApiEnvelope = {
+  success: boolean
+  data?: unknown
+  error?: { code?: string; message?: string } | null
+}
+
+function isApiEnvelope(value: unknown): value is ApiEnvelope {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "success" in value &&
+    typeof (value as ApiEnvelope).success === "boolean"
+  )
+}
+
 function parseErrorMessage(
   res: Response,
   data: unknown,
   isJson: boolean
 ): string {
-  if (
-    isJson &&
-    typeof data === "object" &&
-    data !== null &&
-    "error" in data &&
-    typeof (data as { error: unknown }).error === "string"
-  ) {
-    return (data as { error: string }).error
+  if (isJson && typeof data === "object" && data !== null) {
+    const err = (data as ApiEnvelope).error
+    if (err && typeof err.message === "string" && err.message) {
+      return err.message
+    }
+    if (
+      "error" in data &&
+      typeof (data as { error: unknown }).error === "string"
+    ) {
+      return (data as { error: string }).error
+    }
   }
   if (typeof data === "string" && data.trim()) return data
   return res.statusText || `HTTP ${res.status}`
+}
+
+function unwrapApiData<T>(data: unknown): T {
+  if (isApiEnvelope(data)) {
+    if (!data.success) {
+      const msg = data.error?.message
+      throw new Error(msg && msg.length > 0 ? msg : "요청에 실패했습니다.")
+    }
+    return data.data as T
+  }
+  return data as T
 }
 
 /**
@@ -110,5 +155,5 @@ export async function apiFetch<T = unknown>(
     return undefined as T
   }
 
-  return data as T
+  return unwrapApiData<T>(data)
 }

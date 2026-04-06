@@ -1,14 +1,14 @@
 import { apiFetch } from "@/lib/apiFetch"
 
-/** 백엔드 스키마에 맞게 필드명을 조정하세요. */
 export type LoginRequest = {
   username: string
   password: string
 }
 
+/** 로그인 응답: 백엔드 UserResponse.loginSummary (id, username) */
 export type LoginResponse = {
-  userId: string
-  // 필요 시 세션 쿠키 등은 백엔드 방식에 맞게 확장
+  id: number
+  username: string
 }
 
 export type RegisterRequest = {
@@ -16,14 +16,31 @@ export type RegisterRequest = {
   password: string
 }
 
+/** 회원가입 응답: 전체 UserResponse */
 export type RegisterResponse = {
-  userId: string
+  id: number
+  username: string
+  createdAt?: string | null
+  updatedAt?: string | null
 }
 
-/**
- * 로그인 — userId 헤더 없이 호출 (skipUserId)
- * 경로는 실제 백엔드에 맞게 수정하세요.
- */
+const USER_ID_KEY = "userId"
+
+export function getStoredUserId(): string | null {
+  if (typeof window === "undefined") return null
+  return localStorage.getItem(USER_ID_KEY)
+}
+
+export function setStoredUserId(userId: number | string): void {
+  if (typeof window === "undefined") return
+  localStorage.setItem(USER_ID_KEY, String(userId))
+}
+
+export function clearStoredUserId(): void {
+  if (typeof window === "undefined") return
+  localStorage.removeItem(USER_ID_KEY)
+}
+
 export async function login(payload: LoginRequest): Promise<LoginResponse> {
   return apiFetch<LoginResponse>("/auth/login", {
     method: "POST",
@@ -32,9 +49,6 @@ export async function login(payload: LoginRequest): Promise<LoginResponse> {
   })
 }
 
-/**
- * 회원가입 — userId 헤더 없이 호출
- */
 export async function register(
   payload: RegisterRequest
 ): Promise<RegisterResponse> {
