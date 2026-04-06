@@ -12,7 +12,7 @@ function getApiBaseUrl(): string {
   )
 }
 
-export type ApiFetchMethod = "GET" | "POST" | "PATCH" | "DELETE"
+export type ApiFetchMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
 
 export type ApiFetchOptions = {
   method?: ApiFetchMethod

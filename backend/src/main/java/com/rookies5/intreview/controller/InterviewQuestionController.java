@@ -2,6 +2,7 @@ package com.rookies5.intreview.controller;
 
 import com.rookies5.intreview.dto.request.CreateInterviewQuestionRequest;
 import com.rookies5.intreview.dto.request.PatchInterviewQuestionRequest;
+import com.rookies5.intreview.dto.request.ReorderInterviewQuestionsRequest;
 import com.rookies5.intreview.dto.response.ApiResponse;
 import com.rookies5.intreview.dto.response.InterviewQuestionDetailResponse;
 import com.rookies5.intreview.dto.response.InterviewQuestionSummaryResponse;
@@ -25,12 +26,25 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/interviews/{interviewId}/questions")
 @RequiredArgsConstructor
 public class InterviewQuestionController {
 
     private final InterviewQuestionService interviewQuestionService;
+
+    @PostMapping("/reorder")
+    public ResponseEntity<ApiResponse<List<InterviewQuestionSummaryResponse>>> reorder(
+            @RequestHeader(value = "X-User-Id", required = false) String xUserId,
+            @PathVariable long interviewId,
+            @Valid @RequestBody ReorderInterviewQuestionsRequest request
+    ) {
+        long userId = UserIdHeader.parseRequired(xUserId);
+        List<InterviewQuestionSummaryResponse> data = interviewQuestionService.reorder(userId, interviewId, request);
+        return ResponseEntity.ok(ApiResponse.ok(data, "면접 질문 순서가 변경되었습니다."));
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<InterviewQuestionSummaryResponse>>> list(

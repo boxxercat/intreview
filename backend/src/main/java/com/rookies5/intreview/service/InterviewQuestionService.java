@@ -7,6 +7,7 @@ import com.rookies5.intreview.domain.preparation.PreparationQuestion;
 import com.rookies5.intreview.domain.questionbank.QuestionBankQuestion;
 import com.rookies5.intreview.dto.request.CreateInterviewQuestionRequest;
 import com.rookies5.intreview.dto.request.PatchInterviewQuestionRequest;
+import com.rookies5.intreview.dto.request.ReorderInterviewQuestionsRequest;
 import com.rookies5.intreview.dto.response.InterviewQuestionDetailResponse;
 import com.rookies5.intreview.dto.response.InterviewQuestionSummaryResponse;
 import com.rookies5.intreview.dto.response.PageResponse;
@@ -22,6 +23,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -75,6 +82,50 @@ public class InterviewQuestionService {
         getOwnedInterviewOrThrow(userId, interviewId);
         InterviewQuestion entity = getInterviewQuestionOrThrow(interviewId, questionId);
         interviewQuestionRepository.delete(entity);
+    }
+
+    @Transactional
+    public List<InterviewQuestionSummaryResponse> reorder(
+            long userId,
+            long interviewId,
+            ReorderInterviewQuestionsRequest request
+    ) {
+        getOwnedInterviewOrThrow(userId, interviewId);
+        List<Long> orderedIds = request.orderedQuestionIds().stream()
+                .filter(Objects::nonNull)
+                .toList();
+        if (orderedIds.isEmpty()) {
+            throw new ApiException(ErrorCode.VALIDATION_ERROR, "orderedQuestionIds가 비어 있습니다.");
+        }
+        if (orderedIds.size() != new HashSet<>(orderedIds).size()) {
+            throw new ApiException(ErrorCode.VALIDATION_ERROR, "orderedQuestionIds에 중복된 id가 있습니다.");
+        }
+
+        List<InterviewQuestion> existing = interviewQuestionRepository
+                .findByInterview_IdOrderBySortOrderAscIdAsc(interviewId, Pageable.unpaged())
+                .getContent();
+        Map<Long, InterviewQuestion> byId = existing.stream()
+                .collect(Collectors.toMap(InterviewQuestion::getId, q -> q));
+
+        if (existing.size() != orderedIds.size()) {
+            throw new ApiException(ErrorCode.VALIDATION_ERROR, "면접 질문 개수와 순서 목록 길이가 일치하지 않습니다.");
+        }
+        for (Long id : orderedIds) {
+            if (!byId.containsKey(id)) {
+                throw new ApiException(ErrorCode.VALIDATION_ERROR, "이 면접에 속하지 않는 질문 id가 포함되어 있습니다.");
+            }
+        }
+
+        for (int i = 0; i < orderedIds.size(); i++) {
+            byId.get(orderedIds.get(i)).updateSortOrder(i);
+        }
+
+        return interviewQuestionRepository
+                .findByInterview_IdOrderBySortOrderAscIdAsc(interviewId, Pageable.unpaged())
+                .getContent()
+                .stream()
+                .map(InterviewQuestionSummaryResponse::from)
+                .toList();
     }
 
     private void ensureUserAndInterview(long userId, long interviewId) {

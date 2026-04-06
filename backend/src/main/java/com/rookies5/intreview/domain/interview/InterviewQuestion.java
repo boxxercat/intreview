@@ -135,4 +135,11 @@ public class InterviewQuestion extends BaseEntity {
     public void clearReviewText() {
         this.reviewText = null;
     }
+
+    public void updateSortOrder(int sortOrder) {
+        if (sortOrder < 0) {
+            throw new IllegalArgumentException("sortOrder는 0 이상이어야 합니다.");
+        }
+        this.sortOrder = sortOrder;
+    }
 }
