@@ -10,13 +10,8 @@ import com.rookies5.intreview.dto.request.PatchInterviewQuestionRequest;
 import com.rookies5.intreview.dto.response.InterviewQuestionDetailResponse;
 import com.rookies5.intreview.dto.response.InterviewQuestionSummaryResponse;
 import com.rookies5.intreview.dto.response.PageResponse;
-import com.rookies5.intreview.exception.InterviewNotFoundException;
-import com.rookies5.intreview.exception.InterviewQuestionNotFoundException;
-import com.rookies5.intreview.exception.InvalidSourceCombinationException;
-import com.rookies5.intreview.exception.PreparationQuestionNotFoundException;
-import com.rookies5.intreview.exception.QuestionBankNotFoundException;
-import com.rookies5.intreview.exception.ResourceAccessDeniedException;
-import com.rookies5.intreview.exception.UserNotFoundException;
+import com.rookies5.intreview.exception.ApiException;
+import com.rookies5.intreview.exception.ErrorCode;
 import com.rookies5.intreview.repository.InterviewQuestionRepository;
 import com.rookies5.intreview.repository.InterviewRepository;
 import com.rookies5.intreview.repository.PreparationQuestionRepository;
@@ -89,7 +84,7 @@ public class InterviewQuestionService {
 
     private void ensureUserExists(long userId) {
         if (!userRepository.existsById(userId)) {
-            throw new UserNotFoundException();
+            throw new ApiException(ErrorCode.USER_NOT_FOUND);
         }
     }
 
@@ -97,15 +92,15 @@ public class InterviewQuestionService {
         return interviewRepository.findByIdAndUser_Id(interviewId, userId)
                 .orElseGet(() -> {
                     if (interviewRepository.existsById(interviewId)) {
-                        throw new ResourceAccessDeniedException();
+                        throw new ApiException(ErrorCode.ACCESS_DENIED);
                     }
-                    throw new InterviewNotFoundException();
+                    throw new ApiException(ErrorCode.INTERVIEW_NOT_FOUND);
                 });
     }
 
     private InterviewQuestion getInterviewQuestionOrThrow(long interviewId, long questionId) {
         return interviewQuestionRepository.findByIdAndInterview_Id(questionId, interviewId)
-                .orElseThrow(InterviewQuestionNotFoundException::new);
+                .orElseThrow(() -> new ApiException(ErrorCode.INTERVIEW_QUESTION_NOT_FOUND));
     }
 
     private InterviewQuestion createBySource(long userId, Interview interview, CreateInterviewQuestionRequest request) {
@@ -129,34 +124,34 @@ public class InterviewQuestionService {
 
     private PreparationQuestion getOwnedPreparationQuestionOrThrow(long userId, Long preparationQuestionId) {
         if (preparationQuestionId == null) {
-            throw new InvalidSourceCombinationException();
+            throw new ApiException(ErrorCode.INVALID_SOURCE_COMBINATION);
         }
         return preparationQuestionRepository.findByIdAndOwner_Id(preparationQuestionId, userId)
                 .orElseThrow(() -> {
                     if (preparationQuestionRepository.existsById(preparationQuestionId)) {
-                        return new ResourceAccessDeniedException();
+                        return new ApiException(ErrorCode.ACCESS_DENIED);
                     }
-                    return new PreparationQuestionNotFoundException();
+                    return new ApiException(ErrorCode.PREPARATION_QUESTION_NOT_FOUND);
                 });
     }
 
     private QuestionBankQuestion getOwnedQuestionBankOrThrow(long userId, Long questionBankQuestionId) {
         if (questionBankQuestionId == null) {
-            throw new InvalidSourceCombinationException();
+            throw new ApiException(ErrorCode.INVALID_SOURCE_COMBINATION);
         }
         return questionBankQuestionRepository.findByIdAndOwner_Id(questionBankQuestionId, userId)
                 .orElseThrow(() -> {
                     if (questionBankQuestionRepository.existsById(questionBankQuestionId)) {
-                        return new ResourceAccessDeniedException();
+                        return new ApiException(ErrorCode.ACCESS_DENIED);
                     }
-                    return new QuestionBankNotFoundException();
+                    return new ApiException(ErrorCode.QUESTION_BANK_NOT_FOUND);
                 });
     }
 
     private String requireQuestionText(String value) {
         String trimmed = value == null ? null : value.trim();
         if (trimmed == null || trimmed.isEmpty()) {
-            throw new InvalidSourceCombinationException();
+            throw new ApiException(ErrorCode.INVALID_SOURCE_COMBINATION);
         }
         return trimmed;
     }

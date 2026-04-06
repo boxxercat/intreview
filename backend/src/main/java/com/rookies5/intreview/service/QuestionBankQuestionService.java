@@ -7,9 +7,8 @@ import com.rookies5.intreview.dto.request.PatchQuestionBankQuestionRequest;
 import com.rookies5.intreview.dto.response.PageResponse;
 import com.rookies5.intreview.dto.response.QuestionBankQuestionDetailResponse;
 import com.rookies5.intreview.dto.response.QuestionBankQuestionSummaryResponse;
-import com.rookies5.intreview.exception.QuestionBankNotFoundException;
-import com.rookies5.intreview.exception.ResourceAccessDeniedException;
-import com.rookies5.intreview.exception.UserNotFoundException;
+import com.rookies5.intreview.exception.ApiException;
+import com.rookies5.intreview.exception.ErrorCode;
 import com.rookies5.intreview.repository.QuestionBankQuestionRepository;
 import com.rookies5.intreview.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +40,8 @@ public class QuestionBankQuestionService {
 
     @Transactional
     public QuestionBankQuestionDetailResponse create(long userId, CreateQuestionBankQuestionRequest request) {
-        User owner = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        User owner = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
         QuestionBankQuestion entity = QuestionBankQuestion.create(
                 owner,
                 request.questionText().trim(),
@@ -77,7 +77,7 @@ public class QuestionBankQuestionService {
 
     private void ensureUserExists(long userId) {
         if (!userRepository.existsById(userId)) {
-            throw new UserNotFoundException();
+            throw new ApiException(ErrorCode.USER_NOT_FOUND);
         }
     }
 
@@ -85,9 +85,9 @@ public class QuestionBankQuestionService {
         return questionBankQuestionRepository.findByIdAndOwner_Id(questionId, userId)
                 .orElseGet(() -> {
                     if (questionBankQuestionRepository.existsById(questionId)) {
-                        throw new ResourceAccessDeniedException();
+                        throw new ApiException(ErrorCode.ACCESS_DENIED);
                     }
-                    throw new QuestionBankNotFoundException();
+                    throw new ApiException(ErrorCode.QUESTION_BANK_NOT_FOUND);
                 });
     }
 }

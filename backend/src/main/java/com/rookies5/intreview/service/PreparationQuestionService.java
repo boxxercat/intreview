@@ -7,11 +7,8 @@ import com.rookies5.intreview.dto.request.CreatePreparationQuestionRequest;
 import com.rookies5.intreview.dto.request.PatchPreparationQuestionRequest;
 import com.rookies5.intreview.dto.response.PageResponse;
 import com.rookies5.intreview.dto.response.PreparationQuestionResponse;
-import com.rookies5.intreview.exception.InvalidSourceCombinationException;
-import com.rookies5.intreview.exception.PreparationQuestionNotFoundException;
-import com.rookies5.intreview.exception.QuestionBankNotFoundException;
-import com.rookies5.intreview.exception.ResourceAccessDeniedException;
-import com.rookies5.intreview.exception.UserNotFoundException;
+import com.rookies5.intreview.exception.ApiException;
+import com.rookies5.intreview.exception.ErrorCode;
 import com.rookies5.intreview.repository.PreparationQuestionRepository;
 import com.rookies5.intreview.repository.QuestionBankQuestionRepository;
 import com.rookies5.intreview.repository.UserRepository;
@@ -44,7 +41,8 @@ public class PreparationQuestionService {
 
     @Transactional
     public PreparationQuestionResponse create(long userId, CreatePreparationQuestionRequest request) {
-        User owner = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        User owner = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
         String practiceAnswer = normalizeOptionalText(request.practiceAnswer());
         PreparationQuestion entity = switch (request.sourceType()) {
             case FROM_BANK -> PreparationQuestion.fromBank(
@@ -82,7 +80,7 @@ public class PreparationQuestionService {
 
     private void ensureUserExists(long userId) {
         if (!userRepository.existsById(userId)) {
-            throw new UserNotFoundException();
+            throw new ApiException(ErrorCode.USER_NOT_FOUND);
         }
     }
 
@@ -90,29 +88,29 @@ public class PreparationQuestionService {
         return preparationQuestionRepository.findByIdAndOwner_Id(preparationQuestionId, userId)
                 .orElseGet(() -> {
                     if (preparationQuestionRepository.existsById(preparationQuestionId)) {
-                        throw new ResourceAccessDeniedException();
+                        throw new ApiException(ErrorCode.ACCESS_DENIED);
                     }
-                    throw new PreparationQuestionNotFoundException();
+                    throw new ApiException(ErrorCode.PREPARATION_QUESTION_NOT_FOUND);
                 });
     }
 
     private QuestionBankQuestion getOwnedQuestionBankOrThrow(long userId, Long questionBankQuestionId) {
         if (questionBankQuestionId == null) {
-            throw new InvalidSourceCombinationException();
+            throw new ApiException(ErrorCode.INVALID_SOURCE_COMBINATION);
         }
         return questionBankQuestionRepository.findByIdAndOwner_Id(questionBankQuestionId, userId)
                 .orElseThrow(() -> {
                     if (questionBankQuestionRepository.existsById(questionBankQuestionId)) {
-                        return new ResourceAccessDeniedException();
+                        return new ApiException(ErrorCode.ACCESS_DENIED);
                     }
-                    return new QuestionBankNotFoundException();
+                    return new ApiException(ErrorCode.QUESTION_BANK_NOT_FOUND);
                 });
     }
 
     private String requireText(String value) {
         String trimmed = value == null ? null : value.trim();
         if (trimmed == null || trimmed.isEmpty()) {
-            throw new InvalidSourceCombinationException();
+            throw new ApiException(ErrorCode.INVALID_SOURCE_COMBINATION);
         }
         return trimmed;
     }

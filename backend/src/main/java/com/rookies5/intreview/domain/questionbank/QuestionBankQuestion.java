@@ -2,7 +2,8 @@ package com.rookies5.intreview.domain.questionbank;
 
 import com.rookies5.intreview.domain.common.BaseEntity;
 import com.rookies5.intreview.domain.user.User;
-import com.rookies5.intreview.exception.ArchivedQuestionNotEditableException;
+import com.rookies5.intreview.exception.ApiException;
+import com.rookies5.intreview.exception.ErrorCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -68,7 +69,7 @@ public class QuestionBankQuestion extends BaseEntity {
 
     public void updateQuestionText(String newText) {
         if (this.archived) {
-            throw new ArchivedQuestionNotEditableException();
+            throw new ApiException(ErrorCode.ARCHIVED_QUESTION_NOT_EDITABLE);
         }
         this.questionText = newText;
     }

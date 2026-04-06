@@ -5,9 +5,8 @@ import com.rookies5.intreview.domain.user.UserStatus;
 import com.rookies5.intreview.dto.request.LoginRequest;
 import com.rookies5.intreview.dto.request.RegisterRequest;
 import com.rookies5.intreview.dto.response.UserResponse;
-import com.rookies5.intreview.exception.DuplicateUsernameException;
-import com.rookies5.intreview.exception.InvalidCredentialsException;
-import com.rookies5.intreview.exception.UserNotFoundException;
+import com.rookies5.intreview.exception.ApiException;
+import com.rookies5.intreview.exception.ErrorCode;
 import com.rookies5.intreview.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,7 +23,7 @@ public class UserService {
     @Transactional
     public UserResponse register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.username())) {
-            throw new DuplicateUsernameException();
+            throw new ApiException(ErrorCode.DUPLICATE_USERNAME);
         }
         String hash = passwordEncoder.encode(request.password());
         User user = User.register(request.username(), hash);
@@ -35,12 +34,12 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserResponse login(LoginRequest request) {
         User user = userRepository.findByUsername(request.username())
-                .orElseThrow(InvalidCredentialsException::new);
+                .orElseThrow(() -> new ApiException(ErrorCode.INVALID_CREDENTIALS));
         if (user.getStatus() != UserStatus.ACTIVE) {
-            throw new InvalidCredentialsException();
+            throw new ApiException(ErrorCode.INVALID_CREDENTIALS);
         }
         if (!user.passwordMatches(passwordEncoder, request.password())) {
-            throw new InvalidCredentialsException();
+            throw new ApiException(ErrorCode.INVALID_CREDENTIALS);
         }
         return UserResponse.loginSummary(user);
     }
@@ -48,7 +47,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserResponse getMe(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
         return UserResponse.from(user);
     }
 }

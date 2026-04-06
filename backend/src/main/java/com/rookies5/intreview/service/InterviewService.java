@@ -8,9 +8,8 @@ import com.rookies5.intreview.dto.request.UpdateInterviewRequest;
 import com.rookies5.intreview.dto.response.InterviewDetailResponse;
 import com.rookies5.intreview.dto.response.InterviewSummaryResponse;
 import com.rookies5.intreview.dto.response.PageResponse;
-import com.rookies5.intreview.exception.InterviewNotFoundException;
-import com.rookies5.intreview.exception.ResourceAccessDeniedException;
-import com.rookies5.intreview.exception.UserNotFoundException;
+import com.rookies5.intreview.exception.ApiException;
+import com.rookies5.intreview.exception.ErrorCode;
 import com.rookies5.intreview.repository.InterviewRepository;
 import com.rookies5.intreview.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +40,8 @@ public class InterviewService {
 
     @Transactional
     public InterviewDetailResponse create(long userId, CreateInterviewRequest request) {
-        User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ApiException(ErrorCode.USER_NOT_FOUND));
         Interview interview = Interview.create(
                 user,
                 request.companyName().trim(),
@@ -74,7 +74,7 @@ public class InterviewService {
 
     private void ensureUserExists(long userId) {
         if (!userRepository.existsById(userId)) {
-            throw new UserNotFoundException();
+            throw new ApiException(ErrorCode.USER_NOT_FOUND);
         }
     }
 
@@ -82,9 +82,9 @@ public class InterviewService {
         return interviewRepository.findByIdAndUser_Id(interviewId, userId)
                 .orElseGet(() -> {
                     if (interviewRepository.existsById(interviewId)) {
-                        throw new ResourceAccessDeniedException();
+                        throw new ApiException(ErrorCode.ACCESS_DENIED);
                     }
-                    throw new InterviewNotFoundException();
+                    throw new ApiException(ErrorCode.INTERVIEW_NOT_FOUND);
                 });
     }
 
