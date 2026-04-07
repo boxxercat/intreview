@@ -4,8 +4,11 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
-import { AuthShell, authFieldClass } from "@/components/auth/auth-shell"
+import { AuthShell } from "@/components/auth/auth-shell"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import { login, setStoredUserId } from "@/lib/authApi"
 
 export default function LoginPage() {
@@ -47,54 +50,44 @@ export default function LoginPage() {
         </p>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label
-            htmlFor="login-username"
-            className="text-sm font-medium text-foreground"
-          >
-            아이디
-          </label>
-          <input
-            id="login-username"
-            name="username"
-            type="text"
-            autoComplete="username"
-            required
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className={authFieldClass}
-            placeholder="username"
-            disabled={pending}
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="login-password"
-            className="text-sm font-medium text-foreground"
-          >
-            비밀번호
-          </label>
-          <input
-            id="login-password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={authFieldClass}
-            disabled={pending}
-          />
-        </div>
-        {error ? (
-          <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {error}
-          </p>
-        ) : null}
-        <Button type="submit" className="w-full" size="lg" disabled={pending}>
-          {pending ? "로그인 중…" : "로그인"}
-        </Button>
+      <form onSubmit={handleSubmit}>
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor="login-username">아이디</FieldLabel>
+            <Input
+              id="login-username"
+              name="username"
+              type="text"
+              autoComplete="username"
+              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="username"
+              disabled={pending}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="login-password">비밀번호</FieldLabel>
+            <Input
+              id="login-password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={pending}
+            />
+          </Field>
+          {error ? (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
+          <Button type="submit" className="w-full" size="lg" disabled={pending}>
+            {pending ? "로그인 중…" : "로그인"}
+          </Button>
+        </FieldGroup>
       </form>
     </AuthShell>
   )

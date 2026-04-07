@@ -25,7 +25,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Accordion } from "radix-ui"
+import { Accordion as AccordionRadix } from "radix-ui"
 import {
   useCallback,
   useEffect,
@@ -34,19 +34,24 @@ import {
   useState,
 } from "react"
 
+import { DatePickerField } from "@/components/date-picker-field"
 import { QuestionBankPickerDialog } from "@/components/question-bank/question-bank-picker-dialog"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Accordion } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
-import { getStoredUserId } from "@/lib/authApi"
+import { Card, CardContent } from "@/components/ui/card"
+import { Field, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import {
-  uiBackLink,
-  uiErrorBanner,
-  uiIconButton,
-  uiInput,
-  uiListShell,
-  uiPanel,
-  uiSelect,
-  uiTextarea,
-} from "@/lib/ui"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { getStoredUserId } from "@/lib/authApi"
+import { uiBackLink, uiIconButton } from "@/lib/ui"
 import { cn } from "@/lib/utils"
 import {
   INTERVIEW_QUESTION_SOURCE_LABEL,
@@ -496,7 +501,9 @@ export function InterviewDetailView({ interviewId }: Props) {
   if (error && !interview) {
     return (
       <div className="space-y-4 text-sm">
-        <p className={uiErrorBanner}>{error}</p>
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
         <Link href="/interviews" className={uiBackLink}>
           ← 면접 목록
         </Link>
@@ -514,7 +521,11 @@ export function InterviewDetailView({ interviewId }: Props) {
         </Link>
       </p>
 
-      {error ? <p className={cn(uiErrorBanner, "text-sm")}>{error}</p> : null}
+      {error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
 
       <header className="space-y-5 border-b border-border/80 pb-8">
         <div className="flex items-start justify-between gap-3">
@@ -543,55 +554,54 @@ export function InterviewDetailView({ interviewId }: Props) {
           </Button>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">
+          <Field>
+            <FieldLabel className="text-xs font-normal text-muted-foreground">
               회사명
-            </label>
-            <input
+            </FieldLabel>
+            <Input
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
               maxLength={120}
               disabled={ivSaving}
-              className={cn("mt-1.5", uiInput)}
             />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">
+          </Field>
+          <Field>
+            <FieldLabel className="text-xs font-normal text-muted-foreground">
               직무
-            </label>
-            <input
+            </FieldLabel>
+            <Input
               value={positionTitle}
               onChange={(e) => setPositionTitle(e.target.value)}
               maxLength={120}
               disabled={ivSaving}
-              className={cn("mt-1.5", uiInput)}
             />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">
+          </Field>
+          <Field>
+            <FieldLabel
+              htmlFor="interview-date"
+              className="text-xs font-normal text-muted-foreground"
+            >
               면접일
-            </label>
-            <input
-              type="date"
+            </FieldLabel>
+            <DatePickerField
+              id="interview-date"
               value={interviewDate}
-              onChange={(e) => setInterviewDate(e.target.value)}
+              onChange={setInterviewDate}
               disabled={ivSaving}
-              className={cn("mt-1.5", uiInput)}
             />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">
+          </Field>
+          <Field>
+            <FieldLabel className="text-xs font-normal text-muted-foreground">
               면접 구분 (선택)
-            </label>
-            <input
+            </FieldLabel>
+            <Input
               type="text"
               value={interviewRound}
               onChange={(e) => setInterviewRound(e.target.value)}
               maxLength={2000}
               disabled={ivSaving}
-              className={cn("mt-1.5", uiInput)}
             />
-          </div>
+          </Field>
         </div>
       </header>
 
@@ -600,25 +610,30 @@ export function InterviewDetailView({ interviewId }: Props) {
           준비
         </h2>
 
-        <div className={cn(uiPanel, "space-y-4")}>
-          <textarea
-            value={prepDraft}
-            onChange={(e) => {
-              const v = e.target.value
-              setPrepDraft(v)
-              if (
-                prepBankPick &&
-                v.trim() !== prepBankPick.questionText.trim()
-              ) {
-                setPrepBankPick(null)
-              }
-            }}
-            placeholder="준비 질문"
-            maxLength={4000}
-            rows={3}
-            disabled={prepSubmitting}
-            className={uiTextarea}
-          />
+        <Card>
+          <CardContent className="space-y-6">
+          <Field>
+            <FieldLabel className="text-xs font-normal text-muted-foreground">
+              준비 질문
+            </FieldLabel>
+            <Textarea
+              value={prepDraft}
+              onChange={(e) => {
+                const v = e.target.value
+                setPrepDraft(v)
+                if (
+                  prepBankPick &&
+                  v.trim() !== prepBankPick.questionText.trim()
+                ) {
+                  setPrepBankPick(null)
+                }
+              }}
+              placeholder="준비 질문"
+              maxLength={4000}
+              rows={3}
+              disabled={prepSubmitting}
+            />
+          </Field>
           <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"
@@ -643,15 +658,19 @@ export function InterviewDetailView({ interviewId }: Props) {
               </span>
             ) : null}
           </div>
-          <textarea
-            value={prepPractice}
-            onChange={(e) => setPrepPractice(e.target.value)}
-            placeholder="연습 답변"
-            maxLength={8000}
-            rows={3}
-            disabled={prepSubmitting}
-            className={uiTextarea}
-          />
+          <Field>
+            <FieldLabel className="text-xs font-normal text-muted-foreground">
+              연습 답변
+            </FieldLabel>
+            <Textarea
+              value={prepPractice}
+              onChange={(e) => setPrepPractice(e.target.value)}
+              placeholder="연습 답변"
+              maxLength={8000}
+              rows={3}
+              disabled={prepSubmitting}
+            />
+          </Field>
           <Button
             type="button"
             size="sm"
@@ -660,14 +679,17 @@ export function InterviewDetailView({ interviewId }: Props) {
           >
             준비 질문 추가
           </Button>
-        </div>
+          </CardContent>
+        </Card>
 
         {prepLoading ? (
           <p className="text-sm text-muted-foreground">준비 질문 불러오는 중…</p>
         ) : prepList.length === 0 ? (
           <p className="text-sm text-muted-foreground">준비 질문이 없습니다.</p>
         ) : (
-          <ul className={cn(uiListShell, "divide-y divide-border/80 p-0 text-sm")}>
+          <Card className="gap-0 py-0">
+            <CardContent className="divide-y divide-border/80 px-0 py-0">
+          <ul className="list-none space-y-0 p-0 text-sm">
             {prepList.map((p) => (
               <PreparationQuestionRow
                 key={p.id}
@@ -683,6 +705,8 @@ export function InterviewDetailView({ interviewId }: Props) {
               />
             ))}
           </ul>
+            </CardContent>
+          </Card>
         )}
       </section>
 
@@ -691,58 +715,78 @@ export function InterviewDetailView({ interviewId }: Props) {
           면접 질문 · 복기
         </h2>
 
-        <div className={cn(uiPanel, "space-y-4")}>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">
+        <Card>
+          <CardContent className="space-y-6">
+          <Field>
+            <FieldLabel className="text-xs font-normal text-muted-foreground">
               출처
-            </label>
-            <select
+            </FieldLabel>
+            <Select
               value={iqSource}
-              onChange={(e) =>
-                setIqSource(e.target.value as InterviewQuestionSourceType)
+              onValueChange={(v) =>
+                setIqSource(v as InterviewQuestionSourceType)
               }
               disabled={iqSubmitting}
-              className={cn("mt-1.5 max-w-md", uiSelect)}
             >
-              <option value="CUSTOM">
-                {INTERVIEW_QUESTION_SOURCE_LABEL.CUSTOM}
-              </option>
-              <option value="FROM_PREPARATION">
-                {INTERVIEW_QUESTION_SOURCE_LABEL.FROM_PREPARATION}
-              </option>
-              <option value="FROM_BANK">
-                {INTERVIEW_QUESTION_SOURCE_LABEL.FROM_BANK}
-              </option>
-            </select>
-          </div>
+              <SelectTrigger className="max-w-md w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="CUSTOM">
+                  {INTERVIEW_QUESTION_SOURCE_LABEL.CUSTOM}
+                </SelectItem>
+                <SelectItem value="FROM_PREPARATION">
+                  {INTERVIEW_QUESTION_SOURCE_LABEL.FROM_PREPARATION}
+                </SelectItem>
+                <SelectItem value="FROM_BANK">
+                  {INTERVIEW_QUESTION_SOURCE_LABEL.FROM_BANK}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
 
           {iqSource === "CUSTOM" ? (
-            <textarea
-              value={iqCustomText}
-              onChange={(e) => setIqCustomText(e.target.value)}
-              placeholder="질문 내용"
-              maxLength={4000}
-              rows={3}
-              disabled={iqSubmitting}
-              className={uiTextarea}
-            />
+            <Field>
+              <FieldLabel className="text-xs font-normal text-muted-foreground">
+                질문 내용
+              </FieldLabel>
+              <Textarea
+                value={iqCustomText}
+                onChange={(e) => setIqCustomText(e.target.value)}
+                placeholder="질문 내용"
+                maxLength={4000}
+                rows={3}
+                disabled={iqSubmitting}
+              />
+            </Field>
           ) : null}
 
           {iqSource === "FROM_PREPARATION" ? (
-            <select
-              value={iqPrepId}
-              onChange={(e) => setIqPrepId(e.target.value)}
-              disabled={iqSubmitting || prepList.length === 0}
-              className={cn("max-w-md", uiSelect)}
-            >
-              <option value="">준비 질문 선택</option>
-              {prepList.map((p) => (
-                <option key={p.id} value={p.id}>
-                  #{p.id} — {p.questionTextSnapshot.slice(0, 60)}
-                  {p.questionTextSnapshot.length > 60 ? "…" : ""}
-                </option>
-              ))}
-            </select>
+            <Field>
+              <FieldLabel className="text-xs font-normal text-muted-foreground">
+                준비 질문 선택
+              </FieldLabel>
+              <Select
+                value={iqPrepId === "" ? "__none__" : iqPrepId}
+                onValueChange={(v) =>
+                  setIqPrepId(v === "__none__" ? "" : v)
+                }
+                disabled={iqSubmitting || prepList.length === 0}
+              >
+                <SelectTrigger className="max-w-md w-full">
+                  <SelectValue placeholder="준비 질문 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">준비 질문 선택</SelectItem>
+                  {prepList.map((p) => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      #{p.id} — {p.questionTextSnapshot.slice(0, 60)}
+                      {p.questionTextSnapshot.length > 60 ? "…" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
           ) : null}
 
           {iqSource === "FROM_BANK" ? (
@@ -789,7 +833,8 @@ export function InterviewDetailView({ interviewId }: Props) {
           >
             면접 질문 추가
           </Button>
-        </div>
+          </CardContent>
+        </Card>
 
         {iqLoading ? (
           <p className="text-sm text-muted-foreground">불러오는 중…</p>
@@ -804,7 +849,7 @@ export function InterviewDetailView({ interviewId }: Props) {
               collisionDetection={closestCenter}
               onDragEnd={handleIqDragEnd}
             >
-              <Accordion.Root
+              <Accordion
                 type="single"
                 collapsible
                 value={
@@ -833,7 +878,7 @@ export function InterviewDetailView({ interviewId }: Props) {
                     ))}
                   </ul>
                 </SortableContext>
-              </Accordion.Root>
+              </Accordion>
             </DndContext>
           </div>
         )}
@@ -940,33 +985,31 @@ function PreparationQuestionRow({
           />
         </Button>
       </div>
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">
+      <Field>
+        <FieldLabel className="text-xs font-normal text-muted-foreground">
           질문
-        </label>
-        <textarea
+        </FieldLabel>
+        <Textarea
           value={questionText}
           onChange={(e) => setQuestionText(e.target.value)}
           maxLength={4000}
           rows={3}
           disabled={saving}
-          className={uiTextarea}
         />
-      </div>
-      <div className="space-y-2">
-        <label className="text-xs font-medium text-muted-foreground">
+      </Field>
+      <Field>
+        <FieldLabel className="text-xs font-normal text-muted-foreground">
           연습 답변
-        </label>
-        <textarea
+        </FieldLabel>
+        <Textarea
           value={practiceAnswer}
           onChange={(e) => setPracticeAnswer(e.target.value)}
           maxLength={8000}
           rows={4}
           disabled={saving}
           placeholder="선택"
-          className={uiTextarea}
         />
-      </div>
+      </Field>
       {saving ? (
         <p className="text-xs text-muted-foreground">저장 중…</p>
       ) : null}
@@ -1006,12 +1049,12 @@ function SortableIqRow({
 
   return (
     <li ref={setNodeRef} style={style} className="list-none">
-      <Accordion.Item
+      <AccordionRadix.Item
         value={String(q.id)}
         className="overflow-hidden rounded-xl border border-border/80 bg-card shadow-[0_1px_2px_0_rgb(0_0_0/_0.04)]"
       >
-        <Accordion.Header className="m-0 flex w-full items-stretch">
-          <Accordion.Trigger className="group flex min-w-0 flex-1 items-start gap-2 border-r border-border/60 px-3 py-3 text-left text-sm leading-relaxed outline-none hover:bg-muted/35 data-[state=open]:bg-muted/25">
+        <AccordionRadix.Header className="m-0 flex w-full items-stretch">
+          <AccordionRadix.Trigger className="group flex min-w-0 flex-1 items-start gap-2 border-r border-border/60 px-3 py-3 text-left text-sm leading-relaxed outline-none hover:bg-muted/35 data-[state=open]:bg-muted/25">
             <HugeiconsIcon
               icon={ArrowDown01Icon}
               size={16}
@@ -1023,7 +1066,7 @@ function SortableIqRow({
               </span>{" "}
               {q.questionTextSnapshot}
             </span>
-          </Accordion.Trigger>
+          </AccordionRadix.Trigger>
           <button
             type="button"
             className="flex w-10 shrink-0 cursor-grab touch-none items-center justify-center text-muted-foreground hover:bg-muted/40 active:cursor-grabbing"
@@ -1037,8 +1080,8 @@ function SortableIqRow({
               className="pointer-events-none"
             />
           </button>
-        </Accordion.Header>
-        <Accordion.Content className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden border-t border-border/60 text-sm">
+        </AccordionRadix.Header>
+        <AccordionRadix.Content className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden border-t border-border/60 text-sm">
           <div className="bg-muted/15 px-3 pb-4 pt-3">
             {iqDetails[q.id] ? (
               <InterviewQuestionCard
@@ -1050,8 +1093,8 @@ function SortableIqRow({
               <p className="text-xs text-muted-foreground">불러오는 중…</p>
             )}
           </div>
-        </Accordion.Content>
-      </Accordion.Item>
+        </AccordionRadix.Content>
+      </AccordionRadix.Item>
     </li>
   )
 }
@@ -1127,39 +1170,37 @@ function InterviewQuestionCard({
 
   return (
     <div className="space-y-4 px-1 py-1 text-sm sm:px-2">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <label className="text-xs font-medium text-muted-foreground">
+      <Field>
+        <div className="flex items-center justify-between gap-2">
+          <FieldLabel className="text-xs font-normal text-muted-foreground">
             복기
-          </label>
+          </FieldLabel>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className={cn(uiIconButton, "shrink-0")}
+            disabled={saving}
+            aria-label="삭제"
+            onClick={onDelete}
+          >
+            <HugeiconsIcon
+              icon={Cancel01Icon}
+              size={18}
+              className="pointer-events-none"
+            />
+          </Button>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          className={cn(uiIconButton, "shrink-0 -mt-1")}
-          disabled={saving}
-          aria-label="삭제"
-          onClick={onDelete}
-        >
-          <HugeiconsIcon
-            icon={Cancel01Icon}
-            size={18}
-            className="pointer-events-none"
-          />
-        </Button>
-      </div>
-      <div>
-        <textarea
+        <Textarea
           value={review}
           onChange={(e) => setReview(e.target.value)}
           maxLength={8000}
           rows={7}
           disabled={saving}
           placeholder="면접 직후 느낀 점, 보완할 답변 등"
-          className={cn(uiTextarea, "min-h-40")}
+          className="min-h-40"
         />
-      </div>
+      </Field>
       {saving ? (
         <p className="text-xs text-muted-foreground">저장 중…</p>
       ) : null}

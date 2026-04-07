@@ -5,15 +5,20 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
 
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { DatePickerField } from "@/components/date-picker-field"
 import { Button } from "@/components/ui/button"
-import { getStoredUserId } from "@/lib/authApi"
 import {
-  uiErrorBanner,
-  uiInput,
-  uiListShell,
-  uiPageTitle,
-  uiPanel,
-} from "@/lib/ui"
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Field, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { getStoredUserId } from "@/lib/authApi"
+import { uiPageTitle } from "@/lib/ui"
 import { cn } from "@/lib/utils"
 import {
   type InterviewSummary,
@@ -149,66 +154,83 @@ export default function InterviewsPage() {
         </p>
       </div>
 
-      {error ? <p className={cn(uiErrorBanner, "text-sm")}>{error}</p> : null}
+      {error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
 
-      <section className={cn(uiPanel, "space-y-4")}>
-        <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
-          새 면접
-        </h2>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+            새 면접
+          </CardTitle>
+          <CardDescription className="sr-only">
+            면접 정보를 입력한 뒤 등록합니다.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="iv-company" className="text-xs font-medium text-muted-foreground">
+          <Field>
+            <FieldLabel
+              htmlFor="iv-company"
+              className="text-xs font-normal text-muted-foreground"
+            >
               회사명
-            </label>
-            <input
+            </FieldLabel>
+            <Input
               id="iv-company"
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
               maxLength={120}
               disabled={creating}
-              className={cn("mt-1.5", uiInput)}
             />
-          </div>
-          <div>
-            <label htmlFor="iv-position" className="text-xs font-medium text-muted-foreground">
+          </Field>
+          <Field>
+            <FieldLabel
+              htmlFor="iv-position"
+              className="text-xs font-normal text-muted-foreground"
+            >
               직무
-            </label>
-            <input
+            </FieldLabel>
+            <Input
               id="iv-position"
               value={positionTitle}
               onChange={(e) => setPositionTitle(e.target.value)}
               maxLength={120}
               disabled={creating}
-              className={cn("mt-1.5", uiInput)}
             />
-          </div>
-          <div>
-            <label htmlFor="iv-date" className="text-xs font-medium text-muted-foreground">
+          </Field>
+          <Field>
+            <FieldLabel
+              htmlFor="iv-date"
+              className="text-xs font-normal text-muted-foreground"
+            >
               면접일
-            </label>
-            <input
+            </FieldLabel>
+            <DatePickerField
               id="iv-date"
-              type="date"
               value={interviewDate}
-              onChange={(e) => setInterviewDate(e.target.value)}
+              onChange={setInterviewDate}
               disabled={creating}
-              className={cn("mt-1.5", uiInput)}
             />
-          </div>
-          <div>
-            <label htmlFor="iv-round" className="text-xs font-medium text-muted-foreground">
+          </Field>
+          <Field>
+            <FieldLabel
+              htmlFor="iv-round"
+              className="text-xs font-normal text-muted-foreground"
+            >
               면접 구분 (선택)
-            </label>
-            <input
+            </FieldLabel>
+            <Input
               id="iv-round"
               type="text"
               value={interviewRound}
               onChange={(e) => setInterviewRound(e.target.value)}
               maxLength={2000}
               disabled={creating}
-              className={cn("mt-1.5", uiInput)}
             />
-          </div>
+          </Field>
         </div>
         <Button
           type="button"
@@ -219,7 +241,8 @@ export default function InterviewsPage() {
         >
           {creating ? "등록 중…" : "등록"}
         </Button>
-      </section>
+        </CardContent>
+      </Card>
 
       <section className="space-y-3">
         <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
@@ -230,7 +253,9 @@ export default function InterviewsPage() {
         ) : list.length === 0 ? (
           <p className="text-sm text-muted-foreground">등록된 면접이 없습니다.</p>
         ) : (
-          <ul className={cn(uiListShell, "divide-y divide-border/80")}>
+          <Card className="gap-0 py-0">
+            <CardContent className="divide-y divide-border/80 px-0 py-0">
+          <ul className="list-none space-y-0 p-0">
             {list.map((it) => (
               <li key={it.id} className="relative p-4">
                 <Link
@@ -264,6 +289,8 @@ export default function InterviewsPage() {
               </li>
             ))}
           </ul>
+            </CardContent>
+          </Card>
         )}
 
         {pageInfo && pageInfo.totalPages > 1 ? (

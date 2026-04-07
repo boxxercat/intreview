@@ -1,9 +1,6 @@
 import Link from "next/link"
 
 import { cn } from "@/lib/utils"
-import { uiInput } from "@/lib/ui"
-
-export const authFieldClass = cn(uiInput, "mt-1.5 h-10 py-0 leading-10")
 
 type AuthShellProps = {
   title: string

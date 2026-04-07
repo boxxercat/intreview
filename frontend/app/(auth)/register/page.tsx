@@ -4,8 +4,11 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
-import { AuthShell, authFieldClass } from "@/components/auth/auth-shell"
+import { AuthShell } from "@/components/auth/auth-shell"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import { login, register, setStoredUserId } from "@/lib/authApi"
 
 export default function RegisterPage() {
@@ -49,60 +52,50 @@ export default function RegisterPage() {
         </p>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label
-            htmlFor="register-username"
-            className="text-sm font-medium text-foreground"
-          >
-            아이디
-          </label>
-          <input
-            id="register-username"
-            name="username"
-            type="text"
-            autoComplete="username"
-            required
-            minLength={3}
-            maxLength={30}
-            pattern="^[a-zA-Z0-9_]+$"
-            title="영문, 숫자, 언더스코어만 3~30자"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className={authFieldClass}
-            placeholder="user_name"
-            disabled={pending}
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="register-password"
-            className="text-sm font-medium text-foreground"
-          >
-            비밀번호
-          </label>
-          <input
-            id="register-password"
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={8}
-            maxLength={100}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={authFieldClass}
-            disabled={pending}
-          />
-        </div>
-        {error ? (
-          <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {error}
-          </p>
-        ) : null}
-        <Button type="submit" className="w-full" size="lg" disabled={pending}>
-          {pending ? "가입 중…" : "가입하기"}
-        </Button>
+      <form onSubmit={handleSubmit}>
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor="register-username">아이디</FieldLabel>
+            <Input
+              id="register-username"
+              name="username"
+              type="text"
+              autoComplete="username"
+              required
+              minLength={3}
+              maxLength={30}
+              pattern="^[a-zA-Z0-9_]+$"
+              title="영문, 숫자, 언더스코어만 3~30자"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="user_name"
+              disabled={pending}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="register-password">비밀번호</FieldLabel>
+            <Input
+              id="register-password"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              required
+              minLength={8}
+              maxLength={100}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={pending}
+            />
+          </Field>
+          {error ? (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
+          <Button type="submit" className="w-full" size="lg" disabled={pending}>
+            {pending ? "가입 중…" : "가입하기"}
+          </Button>
+        </FieldGroup>
       </form>
     </AuthShell>
   )

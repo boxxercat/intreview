@@ -6,15 +6,23 @@ import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import { FieldLabel } from "@/components/ui/field"
+import { Textarea } from "@/components/ui/textarea"
 import { getStoredUserId } from "@/lib/authApi"
 import {
   uiBackLink,
-  uiErrorBanner,
   uiIconButton,
   uiPageTitle,
-  uiPanel,
-  uiTextarea,
 } from "@/lib/ui"
 import { cn } from "@/lib/utils"
 import {
@@ -163,7 +171,9 @@ export default function QuestionBankDetailPage() {
   if (error && !detail) {
     return (
       <div className="space-y-4 text-sm">
-        <p className={uiErrorBanner}>{error}</p>
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
         <Link href="/question-bank" className={uiBackLink}>
           ← 문제 은행 목록
         </Link>
@@ -205,43 +215,61 @@ export default function QuestionBankDetailPage() {
         </Button>
       </header>
 
-      {error ? <p className={cn(uiErrorBanner, "text-sm")}>{error}</p> : null}
+      {error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
 
-      <section className={cn(uiPanel, "space-y-3")}>
-        <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor="qb-detail-text" className="text-sm font-medium text-foreground">
-            질문 내용
-          </label>
+      <Card>
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
+          <div>
+            <CardTitle>질문 내용</CardTitle>
+            <CardDescription>
+              수정 시 잠시 후 자동 저장됩니다.
+            </CardDescription>
+          </div>
           {saving ? (
             <span className="text-xs text-muted-foreground">저장 중…</span>
           ) : null}
-        </div>
-        <textarea
-          id="qb-detail-text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          maxLength={4000}
-          rows={8}
-          disabled={saving}
-          className={cn(uiTextarea, "min-h-[12rem]")}
-        />
-      </section>
+        </CardHeader>
+        <CardContent>
+          <Textarea
+            id="qb-detail-text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            maxLength={4000}
+            rows={8}
+            disabled={saving}
+            className="min-h-48"
+            aria-label="질문 내용"
+          />
+        </CardContent>
+      </Card>
 
-      <section className={cn(uiPanel, "flex flex-wrap items-center gap-4")}>
-        <label className="flex cursor-pointer items-center gap-2 text-sm">
-          <input
-            type="checkbox"
+      <Card>
+        <CardContent className="flex flex-wrap items-center gap-4 pt-6">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="qb-archived"
             checked={archived}
             disabled={saving}
-            onChange={(e) => void handleToggleArchived(e.target.checked)}
-            className="size-4 rounded border border-input"
+            onCheckedChange={(v) =>
+              void handleToggleArchived(v === true)
+            }
           />
-          보관(archived)
-        </label>
+          <FieldLabel
+            htmlFor="qb-archived"
+            className="cursor-pointer text-sm font-normal text-foreground"
+          >
+            보관(archived)
+          </FieldLabel>
+        </div>
         <p className="text-xs text-muted-foreground">
           보관된 질문은 목록에서 취소선으로 표시됩니다.
         </p>
-      </section>
+        </CardContent>
+      </Card>
 
       <section className="space-y-2 text-xs text-muted-foreground">
         <p>생성: {new Date(detail.createdAt).toLocaleString()}</p>

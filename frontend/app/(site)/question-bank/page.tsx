@@ -5,17 +5,26 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
 
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { getStoredUserId } from "@/lib/authApi"
 import {
-  uiErrorBanner,
-  uiListShell,
-  uiPageTitle,
-  uiPanel,
-  uiSelect,
-  uiTextarea,
-} from "@/lib/ui"
-import { cn } from "@/lib/utils"
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Field, FieldLabel } from "@/components/ui/field"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { getStoredUserId } from "@/lib/authApi"
+import { uiPageTitle } from "@/lib/ui"
 import {
   SOURCE_TYPE_LABEL,
   type QuestionAssetSourceType,
@@ -149,41 +158,64 @@ export default function QuestionBankPage() {
         </p>
       </div>
 
-      {error ? <p className={cn(uiErrorBanner, "text-sm")}>{error}</p> : null}
+      {error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
 
-      <section className={cn(uiPanel, "space-y-4")}>
-        <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
-          새 질문
-        </h2>
-        <div className="space-y-2">
-          <label htmlFor="qb-source" className="text-xs font-medium text-muted-foreground">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+            새 질문
+          </CardTitle>
+          <CardDescription className="sr-only">
+            출처와 질문을 입력한 뒤 등록합니다.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+        <Field>
+          <FieldLabel
+            htmlFor="qb-source"
+            className="text-xs font-normal text-muted-foreground"
+          >
             출처 유형
-          </label>
-          <select
-            id="qb-source"
+          </FieldLabel>
+          <Select
             value={sourceType}
-            onChange={(e) =>
-              setSourceType(e.target.value as QuestionAssetSourceType)
+            onValueChange={(v) =>
+              setSourceType(v as QuestionAssetSourceType)
             }
-            className={cn("max-w-xs", uiSelect)}
             disabled={creating}
           >
-            <option value="MANUAL">{SOURCE_TYPE_LABEL.MANUAL}</option>
-            <option value="IMPORTED_FROM_INTERVIEW">
-              {SOURCE_TYPE_LABEL.IMPORTED_FROM_INTERVIEW}
-            </option>
-          </select>
-        </div>
-        <textarea
-          id="qb-input"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="질문 내용 (최대 4000자)"
-          maxLength={4000}
-          rows={4}
-          disabled={creating}
-          className={uiTextarea}
-        />
+            <SelectTrigger id="qb-source" className="max-w-xs w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="MANUAL">{SOURCE_TYPE_LABEL.MANUAL}</SelectItem>
+              <SelectItem value="IMPORTED_FROM_INTERVIEW">
+                {SOURCE_TYPE_LABEL.IMPORTED_FROM_INTERVIEW}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field>
+          <FieldLabel
+            htmlFor="qb-input"
+            className="text-xs font-normal text-muted-foreground"
+          >
+            질문 내용
+          </FieldLabel>
+          <Textarea
+            id="qb-input"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="최대 4000자"
+            maxLength={4000}
+            rows={4}
+            disabled={creating}
+          />
+        </Field>
         <Button
           type="button"
           onClick={() => void handleCreate()}
@@ -191,7 +223,8 @@ export default function QuestionBankPage() {
         >
           {creating ? "등록 중…" : "등록"}
         </Button>
-      </section>
+        </CardContent>
+      </Card>
 
       <section className="space-y-3">
         <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
@@ -202,7 +235,9 @@ export default function QuestionBankPage() {
         ) : list.length === 0 ? (
           <p className="text-sm text-muted-foreground">등록된 질문이 없습니다.</p>
         ) : (
-          <ul className={cn(uiListShell, "divide-y divide-border/80")}>
+          <Card className="gap-0 py-0">
+            <CardContent className="divide-y divide-border/80 px-0 py-0">
+          <ul className="list-none space-y-0 p-0">
             {list.map((q) => (
               <li key={q.id} className="relative p-4">
                 <Link
@@ -238,6 +273,8 @@ export default function QuestionBankPage() {
               </li>
             ))}
           </ul>
+            </CardContent>
+          </Card>
         )}
 
         {pageInfo && pageInfo.totalPages > 1 ? (
