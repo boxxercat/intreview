@@ -19,19 +19,31 @@ export function AuthShell({
   footer,
 }: AuthShellProps) {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-linear-to-b from-muted/50 via-background to-background p-6">
-      <div className="w-full max-w-[380px] space-y-6 rounded-xl border border-border/80 bg-card p-8 shadow-[0_1px_3px_0_rgb(0_0_0/_0.05)]">
-        <header className="space-y-1 text-center sm:text-left">
-          <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+    <div className="flex w-full max-w-[400px] flex-col items-stretch">
+      <div
+        className={cn(
+          "w-full space-y-6 rounded-xl border border-border/80 bg-card p-8",
+          "shadow-[0_1px_3px_0_rgb(0_0_0/_0.05)]"
+        )}
+      >
+        <header className="space-y-1.5 text-center">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            {title}
+          </h1>
           {description ? (
-            <p className="text-sm text-muted-foreground">{description}</p>
+            <p className="text-pretty text-sm leading-relaxed text-muted-foreground">
+              {description}
+            </p>
           ) : null}
         </header>
         {children}
         {footer}
       </div>
-      <p className="mt-8 text-center text-xs text-muted-foreground">
-        <Link href="/" className="underline-offset-4 hover:underline">
+      <p className="mt-6 text-center text-xs text-muted-foreground">
+        <Link
+          href="/"
+          className="underline-offset-4 transition-colors hover:text-foreground hover:underline"
+        >
           홈으로
         </Link>
       </p>

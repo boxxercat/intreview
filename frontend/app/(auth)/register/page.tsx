@@ -42,7 +42,7 @@ export default function RegisterPage() {
           이미 계정이 있으신가요?{" "}
           <Link
             href="/login"
-            className="font-medium text-primary underline-offset-4 hover:underline"
+            className="font-medium text-foreground underline-offset-4 hover:underline"
           >
             로그인
           </Link>
@@ -51,7 +51,10 @@ export default function RegisterPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="register-username" className="text-sm font-medium">
+          <label
+            htmlFor="register-username"
+            className="text-sm font-medium text-foreground"
+          >
             아이디
           </label>
           <input
@@ -72,7 +75,10 @@ export default function RegisterPage() {
           />
         </div>
         <div>
-          <label htmlFor="register-password" className="text-sm font-medium">
+          <label
+            htmlFor="register-password"
+            className="text-sm font-medium text-foreground"
+          >
             비밀번호
           </label>
           <input

@@ -21,11 +21,9 @@ export default function RootLayout({
       lang="ko"
       className={cn(fontMono.variable, "font-sans", geist.variable)}
     >
-      <body>
+      <body className="min-h-svh bg-background">
         <AppNav />
-        <main className="mx-auto min-h-[calc(100svh-3.5rem)] w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
-          {children}
-        </main>
+        {children}
       </body>
     </html>
   )

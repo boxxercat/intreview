@@ -40,7 +40,7 @@ export default function LoginPage() {
           계정이 없으신가요?{" "}
           <Link
             href="/register"
-            className="font-medium text-primary underline-offset-4 hover:underline"
+            className="font-medium text-foreground underline-offset-4 hover:underline"
           >
             회원가입
           </Link>
@@ -49,7 +49,10 @@ export default function LoginPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="login-username" className="text-sm font-medium">
+          <label
+            htmlFor="login-username"
+            className="text-sm font-medium text-foreground"
+          >
             아이디
           </label>
           <input
@@ -66,7 +69,10 @@ export default function LoginPage() {
           />
         </div>
         <div>
-          <label htmlFor="login-password" className="text-sm font-medium">
+          <label
+            htmlFor="login-password"
+            className="text-sm font-medium text-foreground"
+          >
             비밀번호
           </label>
           <input
