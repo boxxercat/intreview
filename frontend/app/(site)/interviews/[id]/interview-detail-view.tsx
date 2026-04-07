@@ -996,47 +996,42 @@ function PreparationQuestionRow({
           disabled={saving || coaching}
           placeholder="선택"
         />
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={
-              saving ||
-              coaching ||
-              !practiceAnswer.trim()
-            }
-            onClick={() => {
-              const draft = practiceAnswer.trim()
-              if (!draft) return
-              setCoaching(true)
-              void (async () => {
-                try {
-                  const res = await coachPracticeAnswer(item.id, draft)
-                  setPracticeAnswer(res.suggestedPracticeAnswer)
-                } catch (e) {
-                  onPatchError(
-                    e instanceof Error
-                      ? e.message
-                      : "STAR 첨삭에 실패했습니다."
-                  )
-                } finally {
-                  setCoaching(false)
-                }
-              })()
-            }}
-          >
-            <HugeiconsIcon
-              icon={AiChat01Icon}
-              size={16}
-              className="pointer-events-none mr-1"
-            />
-            {coaching ? "첨삭 중…" : "STAR 첨삭"}
-          </Button>
-          <span className="text-xs text-muted-foreground">
-            두괄식·STAR로 다듬음 · 서버에 GROQ_API_KEY 또는 backend/.env
-          </span>
-        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={
+            saving ||
+            coaching ||
+            !practiceAnswer.trim()
+          }
+          onClick={() => {
+            const draft = practiceAnswer.trim()
+            if (!draft) return
+            setCoaching(true)
+            void (async () => {
+              try {
+                const res = await coachPracticeAnswer(item.id, draft)
+                setPracticeAnswer(res.suggestedPracticeAnswer)
+              } catch (e) {
+                onPatchError(
+                  e instanceof Error
+                    ? e.message
+                    : "답변 개선에 실패했습니다."
+                )
+              } finally {
+                setCoaching(false)
+              }
+            })()
+          }}
+        >
+          <HugeiconsIcon
+            icon={AiChat01Icon}
+            size={16}
+            className="pointer-events-none mr-1"
+          />
+          {coaching ? "개선 중…" : "답변 개선하기"}
+        </Button>
       </Field>
       {saving ? (
         <p className="text-xs text-muted-foreground">저장 중…</p>

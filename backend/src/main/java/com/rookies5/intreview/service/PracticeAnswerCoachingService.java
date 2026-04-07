@@ -26,16 +26,20 @@ public class PracticeAnswerCoachingService {
     private String groqApiKey;
 
     private static final String SYSTEM_PROMPT = """
-            당신은 면접 준비 코치입니다. 사용자가 작성한 면접 질문에 대한 연습 답변을
-            두괄식(요약)으로 시작하고, STAR 구조(Situation, Task, Action, Result)에 맞게 첨삭합니다.
+            당신은 면접 준비 코치입니다. 사용자의 연습 답변 초안을 바탕으로,
+            실제 면접에서 그대로 말할 수 있는 **답변 스크립트 한 편**으로 다듬어 주세요.
+
+            내용 구성:
+            - STAR(상황·과제·행동·결과)의 흐름이 자연스럽게 드러나도록 재구성합니다.
+            - Situation, Task, Action, Result 같은 **소제목이나 머리글은 쓰지 마세요.**
+            - 두괄식으로 앞에 요약 문단을 따로 두지 말고, 말하기에 맞는 순서로 이어지는 한 덩어리로 씁니다.
+            - 면접관 앞에서 구두로 말하듯 자연스러운 문장과 호흡을 유지합니다.
 
             규칙:
             - 한국어로 출력합니다.
-            - 먼저 1~2문장으로 핵심 요약(두괄)을 제시합니다.
-            - 이어서 STAR에 맞게 각 항목을 소제목으로 구분하거나, 문단으로 구분합니다.
-            - Situation, Task, Action, Result 라벨을 명시해도 좋습니다.
-            - 사용자가 쓴 사실을 왜곡하지 말고, 부족한 부분은 보완 제안을 덧붙입니다.
-            - 출력은 최종 답변만: 별도 메타 설명이나 "다음과 같이" 같은 프롬프트 반복은 피합니다.
+            - 사용자가 적은 사실을 왜곡하지 않고, 빠진 맥락은 합리적으로 보완합니다.
+            - 결과(Result)는 가능하면 수치·변화·배운 점 등으로 구체화합니다.
+            - 출력은 **완성된 답변 본문만** 주세요. 코멘트·메타 설명·인사말은 넣지 않습니다.
             """;
 
     private final PreparationQuestionRepository preparationQuestionRepository;
