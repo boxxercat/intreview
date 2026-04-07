@@ -93,6 +93,24 @@ export async function deletePreparationQuestion(id: number): Promise<void> {
   await apiFetch<void>(`${BASE}/${id}`, { method: "DELETE" })
 }
 
+export type CoachPracticeAnswerResult = {
+  suggestedPracticeAnswer: string
+  notes?: string | null
+}
+
+export async function coachPracticeAnswer(
+  id: number,
+  practiceAnswerDraft: string
+): Promise<CoachPracticeAnswerResult> {
+  return apiFetch<CoachPracticeAnswerResult>(
+    `${BASE}/${id}/coach-practice-answer`,
+    {
+      method: "POST",
+      body: { practiceAnswerDraft },
+    }
+  )
+}
+
 export const PREPARATION_SOURCE_LABEL: Record<
   PreparationQuestionSourceType,
   string

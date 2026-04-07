@@ -1,10 +1,13 @@
 package com.rookies5.intreview.controller;
 
+import com.rookies5.intreview.dto.request.CoachPracticeAnswerRequest;
 import com.rookies5.intreview.dto.request.CreatePreparationQuestionRequest;
 import com.rookies5.intreview.dto.request.PatchPreparationQuestionRequest;
 import com.rookies5.intreview.dto.response.ApiResponse;
+import com.rookies5.intreview.dto.response.CoachPracticeAnswerResponse;
 import com.rookies5.intreview.dto.response.PageResponse;
 import com.rookies5.intreview.dto.response.PreparationQuestionResponse;
+import com.rookies5.intreview.service.PracticeAnswerCoachingService;
 import com.rookies5.intreview.service.PreparationQuestionService;
 import com.rookies5.intreview.web.UserIdHeader;
 import jakarta.validation.Valid;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PreparationQuestionController {
 
     private final PreparationQuestionService preparationQuestionService;
+    private final PracticeAnswerCoachingService practiceAnswerCoachingService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<PreparationQuestionResponse>>> list(
@@ -60,6 +64,21 @@ public class PreparationQuestionController {
         PreparationQuestionResponse data = preparationQuestionService.create(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(data, "준비 질문이 등록되었습니다."));
+    }
+
+    @PostMapping("/{preparationQuestionId}/coach-practice-answer")
+    public ResponseEntity<ApiResponse<CoachPracticeAnswerResponse>> coachPracticeAnswer(
+            @RequestHeader(value = "X-User-Id", required = false) String xUserId,
+            @PathVariable long preparationQuestionId,
+            @Valid @RequestBody CoachPracticeAnswerRequest request
+    ) {
+        long userId = UserIdHeader.parseRequired(xUserId);
+        CoachPracticeAnswerResponse data = practiceAnswerCoachingService.coach(
+                userId,
+                preparationQuestionId,
+                request.practiceAnswerDraft()
+        );
+        return ResponseEntity.ok(ApiResponse.ok(data, "연습 답변 첨삭이 완료되었습니다."));
     }
 
     @PatchMapping("/{preparationQuestionId}")
