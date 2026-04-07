@@ -72,6 +72,23 @@ export async function createPreparationQuestion(
   })
 }
 
+export async function patchPreparationQuestion(
+  id: number,
+  body: { questionTextSnapshot?: string; practiceAnswer?: string }
+): Promise<PreparationQuestion> {
+  const payload: Record<string, string> = {}
+  if (body.questionTextSnapshot !== undefined) {
+    payload.questionTextSnapshot = body.questionTextSnapshot
+  }
+  if (body.practiceAnswer !== undefined) {
+    payload.practiceAnswer = body.practiceAnswer
+  }
+  return apiFetch<PreparationQuestion>(`${BASE}/${id}`, {
+    method: "PATCH",
+    body: payload,
+  })
+}
+
 export async function deletePreparationQuestion(id: number): Promise<void> {
   await apiFetch<void>(`${BASE}/${id}`, { method: "DELETE" })
 }

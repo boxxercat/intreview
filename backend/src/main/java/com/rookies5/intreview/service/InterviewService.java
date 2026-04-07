@@ -1,7 +1,6 @@
 package com.rookies5.intreview.service;
 
 import com.rookies5.intreview.domain.interview.Interview;
-import com.rookies5.intreview.domain.interview.InterviewStatus;
 import com.rookies5.intreview.domain.user.User;
 import com.rookies5.intreview.dto.request.CreateInterviewRequest;
 import com.rookies5.intreview.dto.request.UpdateInterviewRequest;
@@ -47,7 +46,7 @@ public class InterviewService {
                 request.companyName().trim(),
                 request.positionTitle().trim(),
                 request.interviewDate(),
-                normalizeOptionalText(request.memo())
+                normalizeOptionalText(request.interviewRound())
         );
         interviewRepository.save(interview);
         return InterviewDetailResponse.from(interview);
@@ -60,9 +59,8 @@ public class InterviewService {
                 request.companyName().trim(),
                 request.positionTitle().trim(),
                 request.interviewDate(),
-                normalizeOptionalText(request.memo())
+                normalizeOptionalText(request.interviewRound())
         );
-        applyStatus(interview, request.status());
         return InterviewDetailResponse.from(interview);
     }
 
@@ -86,14 +84,6 @@ public class InterviewService {
                     }
                     throw new ApiException(ErrorCode.INTERVIEW_NOT_FOUND);
                 });
-    }
-
-    private void applyStatus(Interview interview, InterviewStatus status) {
-        if (status == InterviewStatus.COMPLETED) {
-            interview.markCompleted();
-            return;
-        }
-        interview.markDraft();
     }
 
     private String normalizeOptionalText(String value) {

@@ -52,48 +52,55 @@ public class Interview extends BaseEntity {
     @Column(name = "interview_date", nullable = false)
     private LocalDate interviewDate;
 
+    /** DB NOT NULL 제약 호환. API 미노출. */
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
     private InterviewStatus status;
 
+    /**
+     * 1차 면접, 직무 면접 등 구분. DB 컬럼명은 기존 {@code memo} 유지.
+     */
     @Column(name = "memo", nullable = false, length = 2000)
-    private String memo;
+    private String interviewRound;
 
     @OneToMany(mappedBy = "interview", cascade = CascadeType.ALL, orphanRemoval = true)
     private final List<InterviewQuestion> interviewQuestions = new ArrayList<>();
 
-    private Interview(User user, String companyName, String positionTitle, LocalDate interviewDate, String memo) {
+    private Interview(
+            User user,
+            String companyName,
+            String positionTitle,
+            LocalDate interviewDate,
+            String interviewRound
+    ) {
         this.user = user;
         this.companyName = companyName;
         this.positionTitle = positionTitle;
         this.interviewDate = interviewDate;
+        this.interviewRound = interviewRound == null ? "" : interviewRound;
         this.status = InterviewStatus.DRAFT;
-        this.memo = memo == null ? "" : memo;
     }
 
-    public static Interview create(User user, String companyName, String positionTitle, LocalDate interviewDate, String memo) {
-        return new Interview(user, companyName, positionTitle, interviewDate, memo);
+    public static Interview create(
+            User user,
+            String companyName,
+            String positionTitle,
+            LocalDate interviewDate,
+            String interviewRound
+    ) {
+        return new Interview(user, companyName, positionTitle, interviewDate, interviewRound);
     }
 
-    public void update(String companyName, String positionTitle, LocalDate interviewDate, String memo) {
+    public void update(
+            String companyName,
+            String positionTitle,
+            LocalDate interviewDate,
+            String interviewRound
+    ) {
         this.companyName = companyName;
         this.positionTitle = positionTitle;
         this.interviewDate = interviewDate;
-        this.memo = memo == null ? "" : memo;
-    }
-
-    public void markCompleted() {
-        if (this.status == InterviewStatus.COMPLETED) {
-            return;
-        }
-        this.status = InterviewStatus.COMPLETED;
-    }
-
-    public void markDraft() {
-        if (this.status == InterviewStatus.DRAFT) {
-            return;
-        }
-        this.status = InterviewStatus.DRAFT;
+        this.interviewRound = interviewRound == null ? "" : interviewRound;
     }
 
     public void addInterviewQuestion(InterviewQuestion question) {

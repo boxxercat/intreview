@@ -18,6 +18,6 @@ public record CreateInterviewRequest(
         @NotNull(message = "interviewDate는 필수입니다.")
         LocalDate interviewDate,
 
-        @Size(max = 2000, message = "memo는 2000자 이하여야 합니다.")
-        String memo
+        @Size(max = 2000, message = "interviewRound는 2000자 이하여야 합니다.")
+        String interviewRound
 ) {}

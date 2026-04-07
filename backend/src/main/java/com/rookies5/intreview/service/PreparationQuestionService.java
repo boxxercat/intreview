@@ -1,5 +1,6 @@
 package com.rookies5.intreview.service;
 
+import com.rookies5.intreview.domain.interview.InterviewQuestion;
 import com.rookies5.intreview.domain.preparation.PreparationQuestion;
 import com.rookies5.intreview.domain.questionbank.QuestionBankQuestion;
 import com.rookies5.intreview.domain.user.User;
@@ -9,6 +10,7 @@ import com.rookies5.intreview.dto.response.PageResponse;
 import com.rookies5.intreview.dto.response.PreparationQuestionResponse;
 import com.rookies5.intreview.exception.ApiException;
 import com.rookies5.intreview.exception.ErrorCode;
+import com.rookies5.intreview.repository.InterviewQuestionRepository;
 import com.rookies5.intreview.repository.PreparationQuestionRepository;
 import com.rookies5.intreview.repository.QuestionBankQuestionRepository;
 import com.rookies5.intreview.repository.UserRepository;
@@ -18,11 +20,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class PreparationQuestionService {
 
     private final PreparationQuestionRepository preparationQuestionRepository;
+    private final InterviewQuestionRepository interviewQuestionRepository;
     private final QuestionBankQuestionRepository questionBankQuestionRepository;
     private final UserRepository userRepository;
 
@@ -75,6 +80,10 @@ public class PreparationQuestionService {
     @Transactional
     public void delete(long userId, long preparationQuestionId) {
         PreparationQuestion entity = getOwnedOrThrow(userId, preparationQuestionId);
+        List<InterviewQuestion> dependent =
+                interviewQuestionRepository.findByPreparationQuestion_Id(preparationQuestionId);
+        dependent.forEach(InterviewQuestion::unlinkPreparationForDeletion);
+        interviewQuestionRepository.saveAll(dependent);
         preparationQuestionRepository.delete(entity);
     }
 

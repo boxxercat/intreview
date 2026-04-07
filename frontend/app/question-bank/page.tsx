@@ -1,5 +1,7 @@
 "use client"
 
+import { Cancel01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
 
@@ -194,10 +196,10 @@ export default function QuestionBankPage() {
         ) : (
           <ul className="divide-y divide-border rounded-md border border-border">
             {list.map((q) => (
-              <li key={q.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-start sm:justify-between">
+              <li key={q.id} className="relative p-4">
                 <Link
                   href={`/question-bank/${q.id}`}
-                  className="min-w-0 flex-1 hover:underline"
+                  className="block min-w-0 pr-10 hover:underline"
                 >
                   <p
                     className={
@@ -213,12 +215,17 @@ export default function QuestionBankPage() {
                 </Link>
                 <Button
                   type="button"
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0 text-destructive hover:bg-destructive/10"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="absolute right-2 top-2 z-10 text-black hover:bg-muted dark:text-neutral-100"
+                  aria-label="삭제"
                   onClick={(e) => void handleDelete(q.id, e)}
                 >
-                  삭제
+                  <HugeiconsIcon
+                    icon={Cancel01Icon}
+                    size={18}
+                    className="pointer-events-none"
+                  />
                 </Button>
               </li>
             ))}

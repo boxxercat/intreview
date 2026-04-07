@@ -142,4 +142,16 @@ public class InterviewQuestion extends BaseEntity {
         }
         this.sortOrder = sortOrder;
     }
+
+    /**
+     * 준비 질문 엔티티 삭제 전 FK 제약을 피하기 위해 호출한다.
+     * 질문 스냅샷은 유지하고 출처만 {@link InterviewQuestionSourceType#CUSTOM}으로 바꾼다.
+     */
+    public void unlinkPreparationForDeletion() {
+        if (this.sourceType != InterviewQuestionSourceType.FROM_PREPARATION) {
+            return;
+        }
+        this.preparationQuestion = null;
+        this.sourceType = InterviewQuestionSourceType.CUSTOM;
+    }
 }

@@ -17,9 +17,22 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import {
+  ArrowDown01Icon,
+  Cancel01Icon,
+  Menu01Icon,
+} from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { Accordion } from "radix-ui"
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
 import { QuestionBankPickerDialog } from "@/components/question-bank/question-bank-picker-dialog"
 import { Button } from "@/components/ui/button"
@@ -37,9 +50,7 @@ import {
   reorderInterviewQuestions,
 } from "@/lib/interviewQuestionApi"
 import {
-  INTERVIEW_STATUS_LABEL,
   type InterviewDetail,
-  type InterviewStatus,
   deleteInterview,
   getInterview,
   updateInterview,
@@ -50,8 +61,12 @@ import {
   createPreparationQuestion,
   deletePreparationQuestion,
   listPreparationQuestions,
+  patchPreparationQuestion,
 } from "@/lib/preparationQuestionApi"
-import type { QuestionBankSummary } from "@/lib/questionBankApi"
+import {
+  createQuestionBankQuestion,
+  type QuestionBankSummary,
+} from "@/lib/questionBankApi"
 
 type Props = { interviewId: number }
 
@@ -69,8 +84,7 @@ export function InterviewDetailView({ interviewId }: Props) {
   const [companyName, setCompanyName] = useState("")
   const [positionTitle, setPositionTitle] = useState("")
   const [interviewDate, setInterviewDate] = useState("")
-  const [status, setStatus] = useState<InterviewStatus>("DRAFT")
-  const [memo, setMemo] = useState("")
+  const [interviewRound, setInterviewRound] = useState("")
 
   const [prepList, setPrepList] = useState<PreparationQuestion[]>([])
   const [prepLoading, setPrepLoading] = useState(false)
@@ -80,7 +94,6 @@ export function InterviewDetailView({ interviewId }: Props) {
     null
   )
   const [prepBankDialogOpen, setPrepBankDialogOpen] = useState(false)
-  const [prepMode, setPrepMode] = useState<"CUSTOM" | "FROM_BANK">("CUSTOM")
   const [prepSubmitting, setPrepSubmitting] = useState(false)
 
   const [iqBankPick, setIqBankPick] = useState<QuestionBankSummary | null>(null)
@@ -90,7 +103,6 @@ export function InterviewDetailView({ interviewId }: Props) {
     InterviewQuestionSummary[]
   >([])
   const [iqLoading, setIqLoading] = useState(false)
-  const [iqOrderDirty, setIqOrderDirty] = useState(false)
   const [iqOrderSaving, setIqOrderSaving] = useState(false)
   const [iqDetails, setIqDetails] = useState<
     Record<number, InterviewQuestionDetail | undefined>
@@ -127,8 +139,7 @@ export function InterviewDetailView({ interviewId }: Props) {
       setCompanyName(d.companyName)
       setPositionTitle(d.positionTitle)
       setInterviewDate(d.interviewDate)
-      setStatus(d.status)
-      setMemo(d.memo ?? "")
+      setInterviewRound(d.interviewRound ?? "")
     } catch (e) {
       setError(e instanceof Error ? e.message : "불러오지 못했습니다.")
       setInterview(null)
@@ -143,7 +154,7 @@ export function InterviewDetailView({ interviewId }: Props) {
       const res = await listPreparationQuestions({
         page: 0,
         size: 50,
-        sort: "createdAt,desc",
+        sort: "createdAt,asc",
       })
       setPrepList(res.content)
     } catch {
@@ -152,6 +163,8 @@ export function InterviewDetailView({ interviewId }: Props) {
       setPrepLoading(false)
     }
   }, [])
+
+  const iqOrderPersistedRef = useRef<string | null>(null)
 
   const fetchIq = useCallback(async () => {
     setIqLoading(true)
@@ -162,10 +175,11 @@ export function InterviewDetailView({ interviewId }: Props) {
         sort: "sortOrder,asc",
       })
       setOrderedIqList(res.content)
-      setIqOrderDirty(false)
+      iqOrderPersistedRef.current = res.content.map((q) => q.id).join(",")
       setIqDetails({})
     } catch {
       setOrderedIqList([])
+      iqOrderPersistedRef.current = null
     } finally {
       setIqLoading(false)
     }
@@ -188,37 +202,93 @@ export function InterviewDetailView({ interviewId }: Props) {
   }, [authReady, hasUser, interview, fetchPrep, fetchIq])
 
   useEffect(() => {
-    if (prepMode !== "FROM_BANK") setPrepBankPick(null)
-  }, [prepMode])
-
-  useEffect(() => {
     if (iqSource !== "FROM_BANK") setIqBankPick(null)
   }, [iqSource])
 
-  async function handleSaveInterview() {
+  useEffect(() => {
+    if (expandedId === null) return
+    if (iqDetails[expandedId] !== undefined) return
+    let cancelled = false
+    void getInterviewQuestion(interviewId, expandedId)
+      .then((d) => {
+        if (!cancelled) {
+          setIqDetails((p) => ({ ...p, [expandedId]: d }))
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError("면접 질문 상세를 불러오지 못했습니다.")
+          setExpandedId(null)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [expandedId, interviewId, iqDetails])
+
+  const interviewBaselineRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (!interview) return
+    interviewBaselineRef.current = JSON.stringify({
+      companyName: interview.companyName,
+      positionTitle: interview.positionTitle,
+      interviewDate: interview.interviewDate,
+      interviewRound: interview.interviewRound ?? "",
+    })
+  }, [interview])
+
+  useEffect(() => {
+    if (!interview || ivLoading) return
     const c = companyName.trim()
     const p = positionTitle.trim()
     if (!c || !p || !interviewDate) return
-    setIvSaving(true)
-    setError(null)
-    try {
-      const d = await updateInterview(interviewId, {
-        companyName: c,
-        positionTitle: p,
-        interviewDate,
-        status,
-        memo: memo.trim() || null,
-      })
-      setInterview(d)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "저장에 실패했습니다.")
-    } finally {
-      setIvSaving(false)
-    }
-  }
+    const snapshot = JSON.stringify({
+      companyName: c,
+      positionTitle: p,
+      interviewDate,
+      interviewRound: interviewRound.trim(),
+    })
+    if (snapshot === interviewBaselineRef.current) return
+    const t = setTimeout(() => {
+      void (async () => {
+        setIvSaving(true)
+        setError(null)
+        try {
+          const d = await updateInterview(interviewId, {
+            companyName: c,
+            positionTitle: p,
+            interviewDate,
+            interviewRound: interviewRound.trim() || null,
+          })
+          setInterview(d)
+          interviewBaselineRef.current = JSON.stringify({
+            companyName: d.companyName,
+            positionTitle: d.positionTitle,
+            interviewDate: d.interviewDate,
+            interviewRound: d.interviewRound ?? "",
+          })
+        } catch (e) {
+          setError(e instanceof Error ? e.message : "저장에 실패했습니다.")
+        } finally {
+          setIvSaving(false)
+        }
+      })()
+    }, 600)
+    return () => clearTimeout(t)
+  }, [
+    companyName,
+    positionTitle,
+    interviewDate,
+    interviewRound,
+    interview,
+    interviewId,
+    ivLoading,
+  ])
 
   async function handleDeleteInterview() {
     if (!confirm("면접 기록을 삭제할까요?")) return
+    setError(null)
     try {
       await deleteInterview(interviewId)
       router.push("/interviews")
@@ -232,7 +302,16 @@ export function InterviewDetailView({ interviewId }: Props) {
     setPrepSubmitting(true)
     setError(null)
     try {
-      if (prepMode === "CUSTOM") {
+      if (prepBankPick) {
+        await createPreparationQuestion({
+          sourceType: "FROM_BANK",
+          questionBankQuestionId: prepBankPick.id,
+          practiceAnswer: prepPractice.trim() || null,
+        })
+        setPrepBankPick(null)
+        setPrepDraft("")
+        setPrepPractice("")
+      } else {
         const t = prepDraft.trim()
         if (!t) {
           setError("준비 질문 내용을 입력해 주세요.")
@@ -244,18 +323,6 @@ export function InterviewDetailView({ interviewId }: Props) {
           practiceAnswer: prepPractice.trim() || null,
         })
         setPrepDraft("")
-        setPrepPractice("")
-      } else {
-        if (!prepBankPick) {
-          setError("문제 은행에서 질문을 선택해 주세요.")
-          return
-        }
-        await createPreparationQuestion({
-          sourceType: "FROM_BANK",
-          questionBankQuestionId: prepBankPick.id,
-          practiceAnswer: prepPractice.trim() || null,
-        })
-        setPrepBankPick(null)
         setPrepPractice("")
       }
       await fetchPrep()
@@ -276,21 +343,6 @@ export function InterviewDetailView({ interviewId }: Props) {
     }
   }
 
-  async function toggleExpand(qid: number) {
-    if (expandedId === qid) {
-      setExpandedId(null)
-      return
-    }
-    setExpandedId(qid)
-    if (iqDetails[qid]) return
-    try {
-      const d = await getInterviewQuestion(interviewId, qid)
-      setIqDetails((prev) => ({ ...prev, [qid]: d }))
-    } catch {
-      setError("면접 질문 상세를 불러오지 못했습니다.")
-    }
-  }
-
   function handleIqDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (!over || active.id === over.id) return
@@ -300,28 +352,38 @@ export function InterviewDetailView({ interviewId }: Props) {
       if (oldIndex < 0 || newIndex < 0) return items
       return arrayMove(items, oldIndex, newIndex)
     })
-    setIqOrderDirty(true)
   }
 
-  async function handleSaveIqOrder() {
-    if (orderedIqList.length === 0) return
-    setIqOrderSaving(true)
-    setError(null)
-    try {
-      await reorderInterviewQuestions(
-        interviewId,
-        orderedIqList.map((q) => q.id)
-      )
-      setIqOrderDirty(false)
-      await fetchIq()
-    } catch (e) {
-      setError(
-        e instanceof Error ? e.message : "순서 저장에 실패했습니다."
-      )
-    } finally {
-      setIqOrderSaving(false)
+  useEffect(() => {
+    if (!interview || iqLoading || orderedIqList.length === 0) return
+    const ids = orderedIqList.map((q) => q.id).join(",")
+    if (iqOrderPersistedRef.current === null) {
+      iqOrderPersistedRef.current = ids
+      return
     }
-  }
+    if (ids === iqOrderPersistedRef.current) return
+    const t = setTimeout(() => {
+      void (async () => {
+        setIqOrderSaving(true)
+        setError(null)
+        try {
+          await reorderInterviewQuestions(
+            interviewId,
+            orderedIqList.map((q) => q.id)
+          )
+          iqOrderPersistedRef.current = ids
+          await fetchIq()
+        } catch (e) {
+          setError(
+            e instanceof Error ? e.message : "순서 저장에 실패했습니다."
+          )
+        } finally {
+          setIqOrderSaving(false)
+        }
+      })()
+    }, 400)
+    return () => clearTimeout(t)
+  }, [orderedIqList, interviewId, interview, iqLoading, fetchIq])
 
   async function handleAddInterviewQuestion() {
     const sort = nextSortOrder
@@ -375,20 +437,20 @@ export function InterviewDetailView({ interviewId }: Props) {
     }
   }
 
-  async function handleSaveIqPatch(
-    qid: number,
-    reviewText: string
-  ): Promise<void> {
-    setError(null)
-    try {
-      const updated = await patchInterviewQuestion(interviewId, qid, {
-        reviewText,
-      })
-      setIqDetails((prev) => ({ ...prev, [qid]: updated }))
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "저장에 실패했습니다.")
-    }
-  }
+  const handleSaveIqPatch = useCallback(
+    async (qid: number, reviewText: string): Promise<void> => {
+      setError(null)
+      try {
+        const updated = await patchInterviewQuestion(interviewId, qid, {
+          reviewText,
+        })
+        setIqDetails((prev) => ({ ...prev, [qid]: updated }))
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "저장에 실패했습니다.")
+      }
+    },
+    [interviewId]
+  )
 
   async function handleDeleteIq(qid: number) {
     if (!confirm("이 면접 질문을 삭제할까요?")) return
@@ -450,7 +512,29 @@ export function InterviewDetailView({ interviewId }: Props) {
       ) : null}
 
       <header className="space-y-4 border-b border-border pb-6">
-        <h1 className="text-xl font-semibold">면접 상세</h1>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="text-xl font-semibold">면접 상세</h1>
+            {ivSaving ? (
+              <span className="text-xs text-muted-foreground">저장 중…</span>
+            ) : null}
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="shrink-0 text-black hover:bg-muted dark:text-neutral-100"
+            disabled={ivSaving}
+            aria-label="면접 삭제"
+            onClick={() => void handleDeleteInterview()}
+          >
+            <HugeiconsIcon
+              icon={Cancel01Icon}
+              size={18}
+              className="pointer-events-none"
+            />
+          </Button>
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
             <label className="text-xs text-muted-foreground">회사명</label>
@@ -483,122 +567,71 @@ export function InterviewDetailView({ interviewId }: Props) {
             />
           </div>
           <div>
-            <label className="text-xs text-muted-foreground">상태</label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as InterviewStatus)}
+            <label className="text-xs text-muted-foreground">
+              면접 구분 (선택)
+            </label>
+            <input
+              type="text"
+              value={interviewRound}
+              onChange={(e) => setInterviewRound(e.target.value)}
+              maxLength={2000}
               disabled={ivSaving}
               className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-            >
-              <option value="DRAFT">{INTERVIEW_STATUS_LABEL.DRAFT}</option>
-              <option value="COMPLETED">
-                {INTERVIEW_STATUS_LABEL.COMPLETED}
-              </option>
-            </select>
+            />
           </div>
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground">메모</label>
-          <textarea
-            value={memo}
-            onChange={(e) => setMemo(e.target.value)}
-            maxLength={2000}
-            rows={3}
-            disabled={ivSaving}
-            className="mt-1 w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
-          />
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            onClick={() => void handleSaveInterview()}
-            disabled={ivSaving}
-          >
-            {ivSaving ? "저장 중…" : "면접 정보 저장"}
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={() => void handleDeleteInterview()}
-          >
-            면접 삭제
-          </Button>
         </div>
       </header>
 
       <section className="space-y-4">
-        <div>
-          <h2 className="text-lg font-medium">Preparation Section</h2>
-          <p className="text-xs text-muted-foreground">
-            계정 단위 준비 질문입니다. 실제 면접 전에 연습 답변을 여기서
-            작성해 두고, 면접 후 복기는 아래 Review에서 작성합니다.
-          </p>
-        </div>
+        <h2 className="text-lg font-medium">Preparation</h2>
 
         <div className="rounded-md border border-border p-4 space-y-3">
-          <div className="flex flex-wrap gap-2">
+          <textarea
+            value={prepDraft}
+            onChange={(e) => {
+              const v = e.target.value
+              setPrepDraft(v)
+              if (
+                prepBankPick &&
+                v.trim() !== prepBankPick.questionText.trim()
+              ) {
+                setPrepBankPick(null)
+              }
+            }}
+            placeholder="준비 질문"
+            maxLength={4000}
+            rows={3}
+            disabled={prepSubmitting}
+            className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+          />
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"
-              variant={prepMode === "CUSTOM" ? "default" : "outline"}
+              variant={prepBankPick ? "default" : "outline"}
               size="sm"
-              onClick={() => setPrepMode("CUSTOM")}
-            >
-              직접 입력
-            </Button>
-            <Button
-              type="button"
-              variant={prepMode === "FROM_BANK" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setPrepMode("FROM_BANK")}
+              disabled={prepSubmitting}
+              onClick={() => setPrepBankDialogOpen(true)}
             >
               문제 은행에서 선택
             </Button>
+            {prepBankPick ? (
+              <span className="text-xs text-muted-foreground">
+                은행 #{prepBankPick.id} ·{" "}
+                <button
+                  type="button"
+                  className="text-foreground underline underline-offset-2 hover:no-underline"
+                  disabled={prepSubmitting}
+                  onClick={() => setPrepBankPick(null)}
+                >
+                  해제
+                </button>
+              </span>
+            ) : null}
           </div>
-          {prepMode === "CUSTOM" ? (
-            <textarea
-              value={prepDraft}
-              onChange={(e) => setPrepDraft(e.target.value)}
-              placeholder="준비 질문 내용"
-              maxLength={4000}
-              rows={3}
-              disabled={prepSubmitting}
-              className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
-            />
-          ) : (
-            <div className="space-y-2">
-              {prepBankPick ? (
-                <div className="rounded-md border border-border bg-muted/20 p-3 text-sm">
-                  <p className="font-mono text-xs text-muted-foreground">
-                    선택됨 · ID {prepBankPick.id}
-                  </p>
-                  <p className="mt-1">{prepBankPick.questionText}</p>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="mt-2 h-8 px-2"
-                    disabled={prepSubmitting}
-                    onClick={() => setPrepBankPick(null)}
-                  >
-                    선택 취소
-                  </Button>
-                </div>
-              ) : null}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={prepSubmitting}
-                onClick={() => setPrepBankDialogOpen(true)}
-              >
-                문제 은행 목록 열기…
-              </Button>
-            </div>
-          )}
           <textarea
             value={prepPractice}
             onChange={(e) => setPrepPractice(e.target.value)}
-            placeholder="연습 답변 (면접 전에 작성하는 답변)"
+            placeholder="연습 답변"
             maxLength={8000}
             rows={3}
             disabled={prepSubmitting}
@@ -621,45 +654,25 @@ export function InterviewDetailView({ interviewId }: Props) {
         ) : (
           <ul className="space-y-2 rounded-md border border-border p-3 text-sm">
             {prepList.map((p) => (
-              <li
+              <PreparationQuestionRow
                 key={p.id}
-                className="flex flex-col gap-2 border-b border-border py-2 last:border-0 sm:flex-row sm:justify-between"
-              >
-                <div className="min-w-0">
-                  <p className="font-mono text-xs text-muted-foreground">
-                    #{p.id} · {PREPARATION_SOURCE_LABEL[p.sourceType]}
-                  </p>
-                  <p>{p.questionTextSnapshot}</p>
-                  {p.practiceAnswer ? (
-                    <p className="mt-1 text-muted-foreground">
-                      연습: {p.practiceAnswer}
-                    </p>
-                  ) : null}
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0 self-start text-destructive"
-                  onClick={() => void handleDeletePrep(p.id)}
-                >
-                  삭제
-                </Button>
-              </li>
+                item={p}
+                onPatched={(updated) => {
+                  setError(null)
+                  setPrepList((list) =>
+                    list.map((row) => (row.id === updated.id ? updated : row))
+                  )
+                }}
+                onPatchError={(msg) => setError(msg)}
+                onDelete={() => void handleDeletePrep(p.id)}
+              />
             ))}
           </ul>
         )}
       </section>
 
       <section className="space-y-4">
-        <div>
-          <h2 className="text-lg font-medium">Review Section</h2>
-          <p className="text-xs text-muted-foreground">
-            실제 면접에서 나온 질문을 기록하고, 면접 후 복기만 작성합니다. 답변
-            연습은 Preparation에서 이미 해 둔 내용을 바탕으로 복기를
-            정리하세요. (이 면접에만 속함)
-          </p>
-        </div>
+        <h2 className="text-lg font-medium">Review</h2>
 
         <div className="rounded-md border border-border p-4 space-y-3">
           <div>
@@ -735,20 +748,19 @@ export function InterviewDetailView({ interviewId }: Props) {
               ) : null}
               <Button
                 type="button"
-                variant="outline"
+                variant={iqBankPick ? "default" : "outline"}
                 size="sm"
                 disabled={iqSubmitting}
                 onClick={() => setIqBankDialogOpen(true)}
               >
-                문제 은행 목록 열기…
+                문제 은행에서 선택
               </Button>
             </div>
           ) : null}
 
-          <p className="text-xs text-muted-foreground">
-            새 질문은 목록 맨 아래에 붙습니다. 순서는 아래 목록에서 드래그한 뒤
-            &quot;순서 저장&quot;을 눌러 반영하세요.
-          </p>
+          {iqOrderSaving ? (
+            <p className="text-xs text-muted-foreground">순서 저장 중…</p>
+          ) : null}
 
           <Button
             type="button"
@@ -768,46 +780,41 @@ export function InterviewDetailView({ interviewId }: Props) {
           </p>
         ) : (
           <div className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs text-muted-foreground">
-                왼쪽 ⋮⋮ 핸들을 잡고 끌어 순서를 바꿀 수 있습니다.
-              </p>
-              <Button
-                type="button"
-                size="sm"
-                variant={iqOrderDirty ? "default" : "outline"}
-                disabled={!iqOrderDirty || iqOrderSaving}
-                onClick={() => void handleSaveIqOrder()}
-              >
-                {iqOrderSaving ? "저장 중…" : "순서 저장"}
-              </Button>
-            </div>
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragEnd={handleIqDragEnd}
             >
-              <SortableContext
-                items={orderedIqList.map((q) => String(q.id))}
-                strategy={verticalListSortingStrategy}
+              <Accordion.Root
+                type="single"
+                collapsible
+                value={
+                  expandedId !== null ? String(expandedId) : undefined
+                }
+                onValueChange={(v) => {
+                  setExpandedId(v ? Number(v) : null)
+                }}
               >
-                <ul className="space-y-2">
-                  {orderedIqList.map((q, index) => (
-                    <SortableIqRow
-                      key={q.id}
-                      question={q}
-                      listIndex={index + 1}
-                      expandedId={expandedId}
-                      iqDetails={iqDetails}
-                      onToggleExpand={() => void toggleExpand(q.id)}
-                      onSaveReview={(review) =>
-                        handleSaveIqPatch(q.id, review)
-                      }
-                      onDelete={() => void handleDeleteIq(q.id)}
-                    />
-                  ))}
-                </ul>
-              </SortableContext>
+                <SortableContext
+                  items={orderedIqList.map((q) => String(q.id))}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <ul className="list-none space-y-2 p-0">
+                    {orderedIqList.map((q, index) => (
+                      <SortableIqRow
+                        key={q.id}
+                        question={q}
+                        listIndex={index + 1}
+                        iqDetails={iqDetails}
+                        onSaveReview={(review) =>
+                          handleSaveIqPatch(q.id, review)
+                        }
+                        onDelete={() => void handleDeleteIq(q.id)}
+                      />
+                    ))}
+                  </ul>
+                </SortableContext>
+              </Accordion.Root>
             </DndContext>
           </div>
         )}
@@ -816,7 +823,10 @@ export function InterviewDetailView({ interviewId }: Props) {
       <QuestionBankPickerDialog
         open={prepBankDialogOpen}
         onOpenChange={setPrepBankDialogOpen}
-        onSelect={(q) => setPrepBankPick(q)}
+        onSelect={(q) => {
+          setPrepBankPick(q)
+          setPrepDraft(q.questionText)
+        }}
       />
       <QuestionBankPickerDialog
         open={iqBankDialogOpen}
@@ -828,20 +838,133 @@ export function InterviewDetailView({ interviewId }: Props) {
   )
 }
 
+function PreparationQuestionRow({
+  item,
+  onPatched,
+  onPatchError,
+  onDelete,
+}: {
+  item: PreparationQuestion
+  onPatched: (updated: PreparationQuestion) => void
+  onPatchError: (message: string) => void
+  onDelete: () => void
+}) {
+  const [questionText, setQuestionText] = useState(item.questionTextSnapshot)
+  const [practiceAnswer, setPracticeAnswer] = useState(
+    item.practiceAnswer ?? ""
+  )
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    setQuestionText(item.questionTextSnapshot)
+    setPracticeAnswer(item.practiceAnswer ?? "")
+  }, [item.id])
+
+  useEffect(() => {
+    const q = questionText.trim()
+    if (!q) return
+    const body: { questionTextSnapshot?: string; practiceAnswer?: string } =
+      {}
+    if (q !== item.questionTextSnapshot.trim()) {
+      body.questionTextSnapshot = q
+    }
+    const a = practiceAnswer.trim()
+    const prevA = (item.practiceAnswer ?? "").trim()
+    if (a !== prevA) {
+      body.practiceAnswer = a
+    }
+    if (Object.keys(body).length === 0) return
+
+    const t = setTimeout(() => {
+      void (async () => {
+        setSaving(true)
+        try {
+          const updated = await patchPreparationQuestion(item.id, body)
+          onPatched(updated)
+        } catch (e) {
+          onPatchError(
+            e instanceof Error ? e.message : "준비 질문 수정에 실패했습니다."
+          )
+        } finally {
+          setSaving(false)
+        }
+      })()
+    }, 600)
+    return () => clearTimeout(t)
+  }, [
+    questionText,
+    practiceAnswer,
+    item.id,
+    item.questionTextSnapshot,
+    item.practiceAnswer,
+  ])
+
+  return (
+    <li className="flex flex-col gap-3 border-b border-border py-3 last:border-0">
+      <div className="flex items-start justify-between gap-2">
+        <p className="min-w-0 flex-1 font-mono text-xs text-muted-foreground">
+          #{item.id} · {PREPARATION_SOURCE_LABEL[item.sourceType]}
+        </p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="shrink-0 -mt-1 text-black hover:bg-muted dark:text-neutral-100"
+          disabled={saving}
+          aria-label="삭제"
+          onClick={onDelete}
+        >
+          <HugeiconsIcon
+            icon={Cancel01Icon}
+            size={18}
+            className="pointer-events-none"
+          />
+        </Button>
+      </div>
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">
+          질문
+        </label>
+        <textarea
+          value={questionText}
+          onChange={(e) => setQuestionText(e.target.value)}
+          maxLength={4000}
+          rows={3}
+          disabled={saving}
+          className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+        />
+      </div>
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-muted-foreground">
+          연습 답변
+        </label>
+        <textarea
+          value={practiceAnswer}
+          onChange={(e) => setPracticeAnswer(e.target.value)}
+          maxLength={8000}
+          rows={4}
+          disabled={saving}
+          placeholder="선택"
+          className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+        />
+      </div>
+      {saving ? (
+        <p className="text-xs text-muted-foreground">저장 중…</p>
+      ) : null}
+    </li>
+  )
+}
+
 function SortableIqRow({
   question: q,
   listIndex,
-  expandedId,
   iqDetails,
-  onToggleExpand,
   onSaveReview,
   onDelete,
 }: {
   question: InterviewQuestionSummary
   listIndex: number
-  expandedId: number | null
   iqDetails: Record<number, InterviewQuestionDetail | undefined>
-  onToggleExpand: () => void
   onSaveReview: (review: string) => Promise<void>
   onDelete: () => void
 }) {
@@ -863,50 +986,53 @@ function SortableIqRow({
   }
 
   return (
-    <li
-      ref={setNodeRef}
-      style={style}
-      className="rounded-md border border-border bg-background"
-    >
-      <div className="flex min-h-10 items-stretch">
-        <button
-          type="button"
-          className="flex w-9 shrink-0 cursor-grab touch-none items-center justify-center border-r border-border text-muted-foreground hover:bg-muted/50 active:cursor-grabbing"
-          aria-label="순서 변경"
-          {...attributes}
-          {...listeners}
-        >
-          ⋮⋮
-        </button>
-        <button
-          type="button"
-          onClick={onToggleExpand}
-          className="flex min-w-0 flex-1 items-start justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-muted/40"
-        >
-          <span>
-            <span className="font-mono text-xs text-muted-foreground">
-              #{listIndex}
-            </span>{" "}
-            {q.questionTextSnapshot}
-          </span>
-          <span className="shrink-0 text-xs text-muted-foreground">
-            {INTERVIEW_QUESTION_SOURCE_LABEL[q.sourceType]} ·{" "}
-            {expandedId === q.id ? "접기" : "펼치기"}
-          </span>
-        </button>
-      </div>
-      {expandedId === q.id && iqDetails[q.id] ? (
-        <InterviewQuestionCard
-          detail={iqDetails[q.id]!}
-          onSave={onSaveReview}
-          onDelete={onDelete}
-        />
-      ) : null}
-      {expandedId === q.id && !iqDetails[q.id] ? (
-        <p className="px-3 py-2 text-xs text-muted-foreground">
-          불러오는 중…
-        </p>
-      ) : null}
+    <li ref={setNodeRef} style={style} className="list-none">
+      <Accordion.Item
+        value={String(q.id)}
+        className="overflow-hidden rounded-md border border-border bg-background"
+      >
+        <Accordion.Header className="m-0 flex w-full items-stretch">
+          <Accordion.Trigger className="group flex min-w-0 flex-1 items-start gap-2 border-r border-border px-3 py-2.5 text-left text-sm outline-none hover:bg-muted/40 data-[state=open]:bg-muted/25">
+            <HugeiconsIcon
+              icon={ArrowDown01Icon}
+              size={16}
+              className="mt-0.5 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180"
+            />
+            <span className="min-w-0 flex-1">
+              <span className="font-mono text-xs text-muted-foreground">
+                #{listIndex}
+              </span>{" "}
+              {q.questionTextSnapshot}
+            </span>
+          </Accordion.Trigger>
+          <button
+            type="button"
+            className="flex w-10 shrink-0 cursor-grab touch-none items-center justify-center text-muted-foreground hover:bg-muted/50 active:cursor-grabbing"
+            aria-label="순서 변경"
+            {...attributes}
+            {...listeners}
+          >
+            <HugeiconsIcon
+              icon={Menu01Icon}
+              size={20}
+              className="pointer-events-none"
+            />
+          </button>
+        </Accordion.Header>
+        <Accordion.Content className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm">
+          <div className="px-3 pb-3 pt-2">
+            {iqDetails[q.id] ? (
+              <InterviewQuestionCard
+                detail={iqDetails[q.id]!}
+                onSave={onSaveReview}
+                onDelete={onDelete}
+              />
+            ) : (
+              <p className="text-xs text-muted-foreground">불러오는 중…</p>
+            )}
+          </div>
+        </Accordion.Content>
+      </Accordion.Item>
     </li>
   )
 }
@@ -922,24 +1048,89 @@ function InterviewQuestionCard({
 }) {
   const [review, setReview] = useState(detail.reviewText ?? "")
   const [saving, setSaving] = useState(false)
+  const [bankSaving, setBankSaving] = useState(false)
+  const [bankNotice, setBankNotice] = useState<{
+    kind: "ok" | "err"
+    text: string
+  } | null>(null)
 
-  const reviewUnchanged =
-    review === (detail.reviewText ?? "")
+  const onSaveRef = useRef(onSave)
+  onSaveRef.current = onSave
 
   useEffect(() => {
     setReview(detail.reviewText ?? "")
-  }, [detail.reviewText])
+  }, [detail.id])
+
+  useEffect(() => {
+    if (review === (detail.reviewText ?? "")) return
+    const t = setTimeout(() => {
+      void (async () => {
+        setSaving(true)
+        try {
+          await onSaveRef.current(review)
+        } finally {
+          setSaving(false)
+        }
+      })()
+    }, 600)
+    return () => clearTimeout(t)
+  }, [review, detail.reviewText, detail.id])
+
+  const fromBank =
+    detail.sourceType === "FROM_BANK" &&
+    detail.questionBankQuestionId != null
+
+  async function handleAddToQuestionBank() {
+    const text = detail.questionTextSnapshot.trim()
+    if (!text) return
+    if (
+      !confirm("이 질문을 문제 은행에 추가할까요?")
+    ) {
+      return
+    }
+    setBankSaving(true)
+    setBankNotice(null)
+    try {
+      await createQuestionBankQuestion({
+        questionText: text,
+        sourceType: "IMPORTED_FROM_INTERVIEW",
+      })
+      setBankNotice({ kind: "ok", text: "문제 은행에 추가했습니다." })
+    } catch (e) {
+      setBankNotice({
+        kind: "err",
+        text: e instanceof Error ? e.message : "추가에 실패했습니다.",
+      })
+    } finally {
+      setBankSaving(false)
+    }
+  }
 
   return (
-    <div className="space-y-3 border-t border-border px-3 py-3 text-sm">
+    <div className="space-y-3 px-3 py-3 text-sm">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <label className="text-xs font-medium text-muted-foreground">
+            복기
+          </label>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="shrink-0 -mt-1 text-black hover:bg-muted dark:text-neutral-100"
+          disabled={saving}
+          aria-label="삭제"
+          onClick={onDelete}
+        >
+          <HugeiconsIcon
+            icon={Cancel01Icon}
+            size={18}
+            className="pointer-events-none"
+          />
+        </Button>
+      </div>
       <div>
-        <label className="text-xs font-medium text-muted-foreground">
-          복기 (면접 후 정리)
-        </label>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          답변 연습은 Preparation 단계에서 작성한 내용을 떠올리며 복기만
-          적어 주세요.
-        </p>
         <textarea
           value={review}
           onChange={(e) => setReview(e.target.value)}
@@ -947,36 +1138,45 @@ function InterviewQuestionCard({
           rows={6}
           disabled={saving}
           placeholder="면접 직후 느낀 점, 보완할 답변 등"
-          className="mt-2 w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+          className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
         />
       </div>
-      <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          size="sm"
-          disabled={saving || reviewUnchanged}
-          onClick={async () => {
-            setSaving(true)
-            try {
-              await onSave(review)
-            } finally {
-              setSaving(false)
-            }
-          }}
-        >
-          {saving ? "저장 중…" : "복기 저장"}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="text-destructive"
-          disabled={saving}
-          onClick={onDelete}
-        >
-          삭제
-        </Button>
-      </div>
+      {saving ? (
+        <p className="text-xs text-muted-foreground">저장 중…</p>
+      ) : null}
+      {fromBank ? (
+        <p className="text-xs text-muted-foreground">
+          <Link
+            href={`/question-bank/${detail.questionBankQuestionId}`}
+            className="text-foreground underline underline-offset-2"
+          >
+            문제 은행에서 보기
+          </Link>
+        </p>
+      ) : (
+        <div className="space-y-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={saving || bankSaving}
+            onClick={() => void handleAddToQuestionBank()}
+          >
+            {bankSaving ? "추가 중…" : "문제 은행에 추가"}
+          </Button>
+          {bankNotice ? (
+            <p
+              className={
+                bankNotice.kind === "ok"
+                  ? "text-xs text-muted-foreground"
+                  : "text-xs text-destructive"
+              }
+            >
+              {bankNotice.text}
+            </p>
+          ) : null}
+        </div>
+      )}
     </div>
   )
 }

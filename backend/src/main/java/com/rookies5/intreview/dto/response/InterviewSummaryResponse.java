@@ -1,7 +1,6 @@
 package com.rookies5.intreview.dto.response;
 
 import com.rookies5.intreview.domain.interview.Interview;
-import com.rookies5.intreview.domain.interview.InterviewStatus;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -12,7 +11,7 @@ public final class InterviewSummaryResponse {
     private final String companyName;
     private final String positionTitle;
     private final LocalDate interviewDate;
-    private final InterviewStatus status;
+    private final String interviewRound;
     private final Instant createdAt;
 
     public InterviewSummaryResponse(
@@ -20,14 +19,14 @@ public final class InterviewSummaryResponse {
             String companyName,
             String positionTitle,
             LocalDate interviewDate,
-            InterviewStatus status,
+            String interviewRound,
             Instant createdAt
     ) {
         this.id = id;
         this.companyName = companyName;
         this.positionTitle = positionTitle;
         this.interviewDate = interviewDate;
-        this.status = status;
+        this.interviewRound = interviewRound;
         this.createdAt = createdAt;
     }
 
@@ -47,8 +46,8 @@ public final class InterviewSummaryResponse {
         return interviewDate;
     }
 
-    public InterviewStatus getStatus() {
-        return status;
+    public String getInterviewRound() {
+        return interviewRound;
     }
 
     public Instant getCreatedAt() {
@@ -61,7 +60,7 @@ public final class InterviewSummaryResponse {
                 entity.getCompanyName(),
                 entity.getPositionTitle(),
                 entity.getInterviewDate(),
-                entity.getStatus(),
+                entity.getInterviewRound(),
                 entity.getCreatedAt()
         );
     }

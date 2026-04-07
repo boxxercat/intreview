@@ -1,7 +1,6 @@
 package com.rookies5.intreview.dto.response;
 
 import com.rookies5.intreview.domain.interview.Interview;
-import com.rookies5.intreview.domain.interview.InterviewStatus;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -12,8 +11,7 @@ public final class InterviewDetailResponse {
     private final String companyName;
     private final String positionTitle;
     private final LocalDate interviewDate;
-    private final InterviewStatus status;
-    private final String memo;
+    private final String interviewRound;
     private final Instant createdAt;
     private final Instant updatedAt;
 
@@ -22,8 +20,7 @@ public final class InterviewDetailResponse {
             String companyName,
             String positionTitle,
             LocalDate interviewDate,
-            InterviewStatus status,
-            String memo,
+            String interviewRound,
             Instant createdAt,
             Instant updatedAt
     ) {
@@ -31,8 +28,7 @@ public final class InterviewDetailResponse {
         this.companyName = companyName;
         this.positionTitle = positionTitle;
         this.interviewDate = interviewDate;
-        this.status = status;
-        this.memo = memo;
+        this.interviewRound = interviewRound;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -53,12 +49,8 @@ public final class InterviewDetailResponse {
         return interviewDate;
     }
 
-    public InterviewStatus getStatus() {
-        return status;
-    }
-
-    public String getMemo() {
-        return memo;
+    public String getInterviewRound() {
+        return interviewRound;
     }
 
     public Instant getCreatedAt() {
@@ -75,8 +67,7 @@ public final class InterviewDetailResponse {
                 entity.getCompanyName(),
                 entity.getPositionTitle(),
                 entity.getInterviewDate(),
-                entity.getStatus(),
-                entity.getMemo(),
+                entity.getInterviewRound(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

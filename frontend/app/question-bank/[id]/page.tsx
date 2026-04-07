@@ -1,5 +1,7 @@
 "use client"
 
+import { Cancel01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
@@ -63,29 +65,31 @@ export default function QuestionBankDetailPage() {
     void fetchDetail()
   }, [authReady, hasUser, id, fetchDetail])
 
-  async function handleSaveText() {
+  useEffect(() => {
     if (!detail) return
     const trimmed = text.trim()
-    if (!trimmed) {
-      setError("질문 내용을 입력해 주세요.")
-      return
-    }
+    if (!trimmed) return
     if (trimmed === detail.questionText) return
-    setSaving(true)
-    setError(null)
-    try {
-      const updated = await patchQuestionBankQuestion(id, {
-        questionText: trimmed,
-      })
-      setDetail(updated)
-      setText(updated.questionText)
-      setArchived(updated.archived)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "저장에 실패했습니다.")
-    } finally {
-      setSaving(false)
-    }
-  }
+    const t = setTimeout(() => {
+      void (async () => {
+        setSaving(true)
+        setError(null)
+        try {
+          const updated = await patchQuestionBankQuestion(id, {
+            questionText: trimmed,
+          })
+          setDetail(updated)
+          setText(updated.questionText)
+          setArchived(updated.archived)
+        } catch (e) {
+          setError(e instanceof Error ? e.message : "저장에 실패했습니다.")
+        } finally {
+          setSaving(false)
+        }
+      })()
+    }, 600)
+    return () => clearTimeout(t)
+  }, [text, id, detail])
 
   async function handleToggleArchived(next: boolean) {
     const prev = archived
@@ -170,11 +174,28 @@ export default function QuestionBankDetailPage() {
         </Link>
       </p>
 
-      <header className="space-y-1 border-b border-border pb-4">
-        <h1 className="text-xl font-semibold">질문 상세</h1>
-        <p className="text-sm text-muted-foreground">
-          {SOURCE_TYPE_LABEL[detail.sourceType]} · ID {detail.id}
-        </p>
+      <header className="flex items-start justify-between gap-2 border-b border-border pb-4">
+        <div className="min-w-0 space-y-1">
+          <h1 className="text-xl font-semibold">질문 상세</h1>
+          <p className="text-sm text-muted-foreground">
+            {SOURCE_TYPE_LABEL[detail.sourceType]} · ID {detail.id}
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="shrink-0 text-black hover:bg-muted dark:text-neutral-100"
+          disabled={saving}
+          aria-label="삭제"
+          onClick={() => void handleDelete()}
+        >
+          <HugeiconsIcon
+            icon={Cancel01Icon}
+            size={18}
+            className="pointer-events-none"
+          />
+        </Button>
       </header>
 
       {error ? (
@@ -184,9 +205,14 @@ export default function QuestionBankDetailPage() {
       ) : null}
 
       <section className="space-y-3">
-        <label htmlFor="qb-detail-text" className="text-sm font-medium">
-          질문 내용
-        </label>
+        <div className="flex flex-wrap items-center gap-2">
+          <label htmlFor="qb-detail-text" className="text-sm font-medium">
+            질문 내용
+          </label>
+          {saving ? (
+            <span className="text-xs text-muted-foreground">저장 중…</span>
+          ) : null}
+        </div>
         <textarea
           id="qb-detail-text"
           value={text}
@@ -196,13 +222,6 @@ export default function QuestionBankDetailPage() {
           disabled={saving}
           className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm"
         />
-        <Button
-          type="button"
-          onClick={() => void handleSaveText()}
-          disabled={saving || text.trim() === detail.questionText}
-        >
-          {saving ? "저장 중…" : "내용 저장"}
-        </Button>
       </section>
 
       <section className="flex flex-wrap items-center gap-4 rounded-md border border-border p-4">
@@ -225,15 +244,6 @@ export default function QuestionBankDetailPage() {
         <p>생성: {new Date(detail.createdAt).toLocaleString()}</p>
         <p>수정: {new Date(detail.updatedAt).toLocaleString()}</p>
       </section>
-
-      <Button
-        type="button"
-        variant="destructive"
-        onClick={() => void handleDelete()}
-        disabled={saving}
-      >
-        삭제
-      </Button>
     </div>
   )
 }

@@ -1,6 +1,5 @@
 package com.rookies5.intreview.dto.request;
 
-import com.rookies5.intreview.domain.interview.InterviewStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -19,9 +18,6 @@ public record UpdateInterviewRequest(
         @NotNull(message = "interviewDate는 필수입니다.")
         LocalDate interviewDate,
 
-        @NotNull(message = "status는 필수입니다.")
-        InterviewStatus status,
-
-        @Size(max = 2000, message = "memo는 2000자 이하여야 합니다.")
-        String memo
+        @Size(max = 2000, message = "interviewRound는 2000자 이하여야 합니다.")
+        String interviewRound
 ) {}

@@ -1,19 +1,17 @@
 import { apiFetch } from "@/lib/apiFetch"
 import type { PageResponse } from "@/lib/questionBankApi"
 
-export type InterviewStatus = "DRAFT" | "COMPLETED"
-
 export type InterviewSummary = {
   id: number
   companyName: string
   positionTitle: string
   interviewDate: string
-  status: InterviewStatus
+  /** 1차 면접, 직무 면접 등 */
+  interviewRound: string
   createdAt: string
 }
 
 export type InterviewDetail = InterviewSummary & {
-  memo: string
   updatedAt: string
 }
 
@@ -50,7 +48,7 @@ export async function createInterview(body: {
   companyName: string
   positionTitle: string
   interviewDate: string
-  memo?: string | null
+  interviewRound?: string | null
 }): Promise<InterviewDetail> {
   return apiFetch<InterviewDetail>(BASE, {
     method: "POST",
@@ -58,7 +56,7 @@ export async function createInterview(body: {
       companyName: body.companyName,
       positionTitle: body.positionTitle,
       interviewDate: body.interviewDate,
-      memo: body.memo ?? null,
+      interviewRound: body.interviewRound ?? null,
     },
   })
 }
@@ -69,8 +67,7 @@ export async function updateInterview(
     companyName: string
     positionTitle: string
     interviewDate: string
-    status: InterviewStatus
-    memo?: string | null
+    interviewRound?: string | null
   }
 ): Promise<InterviewDetail> {
   return apiFetch<InterviewDetail>(`${BASE}/${id}`, {
@@ -79,17 +76,11 @@ export async function updateInterview(
       companyName: body.companyName,
       positionTitle: body.positionTitle,
       interviewDate: body.interviewDate,
-      status: body.status,
-      memo: body.memo ?? null,
+      interviewRound: body.interviewRound ?? null,
     },
   })
 }
 
 export async function deleteInterview(id: number): Promise<void> {
   await apiFetch<void>(`${BASE}/${id}`, { method: "DELETE" })
-}
-
-export const INTERVIEW_STATUS_LABEL: Record<InterviewStatus, string> = {
-  DRAFT: "작성 중",
-  COMPLETED: "완료",
 }

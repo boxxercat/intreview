@@ -72,8 +72,7 @@ export function QuestionBankPickerDialog({
         >
           <Dialog.Title className="text-lg font-semibold">{title}</Dialog.Title>
           <Dialog.Description className="mt-1 text-sm text-muted-foreground">
-            테이블에서 질문을 클릭하거나 &quot;선택&quot;을 누르세요. 보관된 항목은
-            제외됩니다.
+            행을 클릭하거나 선택을 누르세요. 보관 항목은 제외됩니다.
           </Dialog.Description>
 
           <div className="mt-4 max-h-[min(55vh,480px)] overflow-auto rounded-md border border-border">

@@ -1,12 +1,13 @@
 "use client"
 
+import { Cancel01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { getStoredUserId } from "@/lib/authApi"
 import {
-  INTERVIEW_STATUS_LABEL,
   type InterviewSummary,
   createInterview,
   deleteInterview,
@@ -31,7 +32,7 @@ export default function InterviewsPage() {
   const [companyName, setCompanyName] = useState("")
   const [positionTitle, setPositionTitle] = useState("")
   const [interviewDate, setInterviewDate] = useState("")
-  const [memo, setMemo] = useState("")
+  const [interviewRound, setInterviewRound] = useState("")
   const [creating, setCreating] = useState(false)
 
   const load = useCallback(async (pageIndex: number) => {
@@ -86,12 +87,12 @@ export default function InterviewsPage() {
         companyName: company,
         positionTitle: position,
         interviewDate,
-        memo: memo.trim() || null,
+        interviewRound: interviewRound.trim() || null,
       })
       setCompanyName("")
       setPositionTitle("")
       setInterviewDate("")
-      setMemo("")
+      setInterviewRound("")
       if (page === 0) await load(0)
       else setPage(0)
     } catch (e) {
@@ -188,20 +189,20 @@ export default function InterviewsPage() {
               className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
             />
           </div>
-        </div>
-        <div>
-          <label htmlFor="iv-memo" className="text-xs text-muted-foreground">
-            메모 (선택)
-          </label>
-          <textarea
-            id="iv-memo"
-            value={memo}
-            onChange={(e) => setMemo(e.target.value)}
-            maxLength={2000}
-            rows={2}
-            disabled={creating}
-            className="mt-1 w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
-          />
+          <div>
+            <label htmlFor="iv-round" className="text-xs text-muted-foreground">
+              면접 구분 (선택)
+            </label>
+            <input
+              id="iv-round"
+              type="text"
+              value={interviewRound}
+              onChange={(e) => setInterviewRound(e.target.value)}
+              maxLength={2000}
+              disabled={creating}
+              className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+            />
+          </div>
         </div>
         <Button
           type="button"
@@ -223,28 +224,32 @@ export default function InterviewsPage() {
         ) : (
           <ul className="divide-y divide-border rounded-md border border-border">
             {list.map((it) => (
-              <li
-                key={it.id}
-                className="flex flex-col gap-2 p-4 sm:flex-row sm:items-start sm:justify-between"
-              >
+              <li key={it.id} className="relative p-4">
                 <Link
                   href={`/interviews/${it.id}`}
-                  className="min-w-0 flex-1 hover:underline"
+                  className="block min-w-0 pr-10 hover:underline"
                 >
                   <p className="font-medium">{it.companyName}</p>
                   <p className="text-sm text-muted-foreground">
-                    {it.positionTitle} · {it.interviewDate} ·{" "}
-                    {INTERVIEW_STATUS_LABEL[it.status]}
+                    {it.positionTitle} · {it.interviewDate}
+                    {it.interviewRound.trim()
+                      ? ` · ${it.interviewRound.trim()}`
+                      : ""}
                   </p>
                 </Link>
                 <Button
                   type="button"
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0 text-destructive hover:bg-destructive/10"
+                  variant="ghost"
+                  size="icon-sm"
+                  className="absolute right-2 top-2 z-10 text-black hover:bg-muted dark:text-neutral-100"
+                  aria-label="삭제"
                   onClick={(e) => void handleDelete(it.id, e)}
                 >
-                  삭제
+                  <HugeiconsIcon
+                    icon={Cancel01Icon}
+                    size={18}
+                    className="pointer-events-none"
+                  />
                 </Button>
               </li>
             ))}
