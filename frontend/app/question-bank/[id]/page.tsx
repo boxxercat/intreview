@@ -9,6 +9,15 @@ import { useCallback, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { getStoredUserId } from "@/lib/authApi"
 import {
+  uiBackLink,
+  uiErrorBanner,
+  uiIconButton,
+  uiPageTitle,
+  uiPanel,
+  uiTextarea,
+} from "@/lib/ui"
+import { cn } from "@/lib/utils"
+import {
   SOURCE_TYPE_LABEL,
   deleteQuestionBankQuestion,
   getQuestionBankQuestion,
@@ -127,7 +136,7 @@ export default function QuestionBankDetailPage() {
   if (!hasUser) {
     return (
       <div className="space-y-4 text-sm">
-        <h1 className="text-xl font-semibold">질문 상세</h1>
+        <h1 className={uiPageTitle}>질문 상세</h1>
         <p className="text-muted-foreground">로그인이 필요합니다.</p>
         <Button asChild>
           <Link href="/login">로그인</Link>
@@ -154,11 +163,9 @@ export default function QuestionBankDetailPage() {
   if (error && !detail) {
     return (
       <div className="space-y-4 text-sm">
-        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-destructive">
-          {error}
-        </p>
-        <Link href="/question-bank" className="text-muted-foreground underline">
-          ← Question Bank 목록
+        <p className={uiErrorBanner}>{error}</p>
+        <Link href="/question-bank" className={uiBackLink}>
+          ← 문제 은행 목록
         </Link>
       </div>
     )
@@ -167,16 +174,16 @@ export default function QuestionBankDetailPage() {
   if (!detail) return null
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <p className="text-sm">
-        <Link href="/question-bank" className="text-muted-foreground underline">
-          ← Question Bank
+        <Link href="/question-bank" className={uiBackLink}>
+          ← 문제 은행
         </Link>
       </p>
 
-      <header className="flex items-start justify-between gap-2 border-b border-border pb-4">
+      <header className="flex items-start justify-between gap-3 border-b border-border/80 pb-6">
         <div className="min-w-0 space-y-1">
-          <h1 className="text-xl font-semibold">질문 상세</h1>
+          <h1 className={uiPageTitle}>질문 상세</h1>
           <p className="text-sm text-muted-foreground">
             {SOURCE_TYPE_LABEL[detail.sourceType]} · ID {detail.id}
           </p>
@@ -185,7 +192,7 @@ export default function QuestionBankDetailPage() {
           type="button"
           variant="ghost"
           size="icon-sm"
-          className="shrink-0 text-black hover:bg-muted dark:text-neutral-100"
+          className={cn(uiIconButton, "shrink-0")}
           disabled={saving}
           aria-label="삭제"
           onClick={() => void handleDelete()}
@@ -198,15 +205,11 @@ export default function QuestionBankDetailPage() {
         </Button>
       </header>
 
-      {error ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
+      {error ? <p className={cn(uiErrorBanner, "text-sm")}>{error}</p> : null}
 
-      <section className="space-y-3">
+      <section className={cn(uiPanel, "space-y-3")}>
         <div className="flex flex-wrap items-center gap-2">
-          <label htmlFor="qb-detail-text" className="text-sm font-medium">
+          <label htmlFor="qb-detail-text" className="text-sm font-medium text-foreground">
             질문 내용
           </label>
           {saving ? (
@@ -220,18 +223,18 @@ export default function QuestionBankDetailPage() {
           maxLength={4000}
           rows={8}
           disabled={saving}
-          className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm"
+          className={cn(uiTextarea, "min-h-[12rem]")}
         />
       </section>
 
-      <section className="flex flex-wrap items-center gap-4 rounded-md border border-border p-4">
+      <section className={cn(uiPanel, "flex flex-wrap items-center gap-4")}>
         <label className="flex cursor-pointer items-center gap-2 text-sm">
           <input
             type="checkbox"
             checked={archived}
             disabled={saving}
             onChange={(e) => void handleToggleArchived(e.target.checked)}
-            className="size-4 rounded border-input"
+            className="size-4 rounded border border-input"
           />
           보관(archived)
         </label>

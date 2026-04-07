@@ -1,13 +1,9 @@
 import Link from "next/link"
 
 import { cn } from "@/lib/utils"
+import { uiInput } from "@/lib/ui"
 
-export const authFieldClass = cn(
-  "mt-1.5 flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-[color,box-shadow]",
-  "placeholder:text-muted-foreground",
-  "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/30",
-  "disabled:cursor-not-allowed disabled:opacity-50"
-)
+export const authFieldClass = cn(uiInput, "mt-1.5 h-10 py-0 leading-10")
 
 type AuthShellProps = {
   title: string
@@ -23,8 +19,8 @@ export function AuthShell({
   footer,
 }: AuthShellProps) {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-linear-to-b from-muted/40 to-background p-6">
-      <div className="w-full max-w-[380px] space-y-6 rounded-2xl border border-border bg-card p-8 shadow-sm">
+    <div className="flex min-h-svh flex-col items-center justify-center bg-linear-to-b from-muted/50 via-background to-background p-6">
+      <div className="w-full max-w-[380px] space-y-6 rounded-xl border border-border/80 bg-card p-8 shadow-[0_1px_3px_0_rgb(0_0_0/_0.05)]">
         <header className="space-y-1 text-center sm:text-left">
           <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
           {description ? (

@@ -18,12 +18,12 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={cn("antialiased", fontMono.variable, "font-sans", geist.variable)}
+      lang="ko"
+      className={cn(fontMono.variable, "font-sans", geist.variable)}
     >
       <body>
         <AppNav />
-        <main className="mx-auto min-h-[calc(100svh-3.25rem)] max-w-3xl p-6">
+        <main className="mx-auto min-h-[calc(100svh-3.5rem)] w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
           {children}
         </main>
       </body>

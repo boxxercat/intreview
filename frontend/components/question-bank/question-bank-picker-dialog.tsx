@@ -62,12 +62,12 @@ export function QuestionBankPickerDialog({
       <Dialog.Portal>
         <Dialog.Overlay
           className={cn(
-            "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50"
+            "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/40 backdrop-blur-[2px]"
           )}
         />
         <Dialog.Content
           className={cn(
-            "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-1/2 left-1/2 z-50 max-h-[min(85vh,720px)] w-[min(calc(100vw-2rem),720px)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-background p-4 shadow-lg outline-none"
+            "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-1/2 left-1/2 z-50 max-h-[min(85vh,720px)] w-[min(calc(100vw-2rem),720px)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border/80 bg-card p-5 shadow-[0_8px_30px_rgb(0_0_0/_0.08)] outline-none"
           )}
         >
           <Dialog.Title className="text-lg font-semibold">{title}</Dialog.Title>

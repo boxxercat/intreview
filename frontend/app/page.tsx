@@ -4,38 +4,46 @@ import { HomeAuthActions } from "@/components/auth/home-auth-actions"
 
 export default function Page() {
   return (
-    <div className="space-y-8 text-sm leading-relaxed">
-      <section className="space-y-3">
-        <h1 className="text-xl font-semibold tracking-tight">Intreview</h1>
-        <p className="text-muted-foreground">
-          면접 준비 질문과 실제 면접에서 나온 질문을 나누어 기록하고, 답변과
-          복기까지 한곳에서 관리하는 웹 앱입니다. (현재 UI 뼈대 · 더미 데이터)
+    <div className="space-y-10 text-sm leading-relaxed">
+      <section className="space-y-4">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Intreview
+        </h1>
+        <p className="max-w-prose text-[15px] text-muted-foreground leading-7">
+          면접 준비와 실제 질문을 나누어 적고, 연습 답변과 면접 후 복기까지 한
+          흐름으로 정리할 수 있습니다.
         </p>
         <HomeAuthActions />
       </section>
 
-      <section className="space-y-2 border-t border-border pt-6">
-        <h2 className="font-medium">둘러보기</h2>
-        <ul className="list-inside list-disc space-y-1 text-muted-foreground">
+      <section className="space-y-3 border-t border-border/80 pt-8">
+        <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+          바로가기
+        </h2>
+        <ul className="space-y-2 text-muted-foreground">
           <li>
-            <Link href="/question-bank" className="text-foreground underline">
-              Question Bank
+            <Link
+              href="/question-bank"
+              className="font-medium text-foreground underline-offset-4 hover:underline"
+            >
+              문제 은행
             </Link>
-            — 저장해 둔 질문 모음
+            <span className="text-muted-foreground"> — 자주 쓰는 질문 보관</span>
           </li>
           <li>
-            <Link href="/interviews" className="text-foreground underline">
-              Interview
+            <Link
+              href="/interviews"
+              className="font-medium text-foreground underline-offset-4 hover:underline"
+            >
+              면접 기록
             </Link>
-            — 면접별 기록 및 상세(준비 / 복기)
+            <span className="text-muted-foreground">
+              {" "}
+              — 회사·일정별 준비와 복기
+            </span>
           </li>
         </ul>
       </section>
-
-      <p className="font-mono text-xs text-muted-foreground">
-        <kbd className="rounded border border-border px-1 py-0.5">d</kbd> 다크
-        모드
-      </p>
     </div>
   )
 }

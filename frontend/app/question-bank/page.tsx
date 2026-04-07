@@ -8,6 +8,15 @@ import { useCallback, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { getStoredUserId } from "@/lib/authApi"
 import {
+  uiErrorBanner,
+  uiListShell,
+  uiPageTitle,
+  uiPanel,
+  uiSelect,
+  uiTextarea,
+} from "@/lib/ui"
+import { cn } from "@/lib/utils"
+import {
   SOURCE_TYPE_LABEL,
   type QuestionAssetSourceType,
   type QuestionBankSummary,
@@ -120,9 +129,9 @@ export default function QuestionBankPage() {
   if (!hasUser) {
     return (
       <div className="space-y-4 text-sm">
-        <h1 className="text-xl font-semibold">Question Bank</h1>
+        <h1 className={uiPageTitle}>문제 은행</h1>
         <p className="text-muted-foreground">
-          질문 은행은 로그인 후 이용할 수 있습니다.
+          로그인 후 이용할 수 있습니다.
         </p>
         <Button asChild>
           <Link href="/login">로그인</Link>
@@ -132,25 +141,22 @@ export default function QuestionBankPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div>
-        <h1 className="text-xl font-semibold">Question Bank</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          저장해 둔 질문 자산을 관리합니다. 총{" "}
-          {pageInfo?.totalElements ?? "—"}건
+        <h1 className={uiPageTitle}>문제 은행</h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
+          저장해 둔 질문 · 총 {pageInfo?.totalElements ?? "—"}건
         </p>
       </div>
 
-      {error ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
+      {error ? <p className={cn(uiErrorBanner, "text-sm")}>{error}</p> : null}
 
-      <section className="space-y-3 rounded-md border border-border p-4">
-        <h2 className="text-sm font-medium">새 질문 등록</h2>
+      <section className={cn(uiPanel, "space-y-4")}>
+        <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+          새 질문
+        </h2>
         <div className="space-y-2">
-          <label htmlFor="qb-source" className="text-xs text-muted-foreground">
+          <label htmlFor="qb-source" className="text-xs font-medium text-muted-foreground">
             출처 유형
           </label>
           <select
@@ -159,7 +165,7 @@ export default function QuestionBankPage() {
             onChange={(e) =>
               setSourceType(e.target.value as QuestionAssetSourceType)
             }
-            className="h-9 w-full max-w-xs rounded-md border border-input bg-background px-2 text-sm"
+            className={cn("max-w-xs", uiSelect)}
             disabled={creating}
           >
             <option value="MANUAL">{SOURCE_TYPE_LABEL.MANUAL}</option>
@@ -176,7 +182,7 @@ export default function QuestionBankPage() {
           maxLength={4000}
           rows={4}
           disabled={creating}
-          className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm"
+          className={uiTextarea}
         />
         <Button
           type="button"
@@ -188,18 +194,20 @@ export default function QuestionBankPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-medium">목록</h2>
+        <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+          목록
+        </h2>
         {loading ? (
           <p className="text-sm text-muted-foreground">불러오는 중…</p>
         ) : list.length === 0 ? (
           <p className="text-sm text-muted-foreground">등록된 질문이 없습니다.</p>
         ) : (
-          <ul className="divide-y divide-border rounded-md border border-border">
+          <ul className={cn(uiListShell, "divide-y divide-border/80")}>
             {list.map((q) => (
               <li key={q.id} className="relative p-4">
                 <Link
                   href={`/question-bank/${q.id}`}
-                  className="block min-w-0 pr-10 hover:underline"
+                  className="block min-w-0 pr-10 transition-colors hover:bg-muted/30"
                 >
                   <p
                     className={
@@ -217,7 +225,7 @@ export default function QuestionBankPage() {
                   type="button"
                   variant="ghost"
                   size="icon-sm"
-                  className="absolute right-2 top-2 z-10 text-black hover:bg-muted dark:text-neutral-100"
+                  className="absolute right-2 top-2 z-10 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
                   aria-label="삭제"
                   onClick={(e) => void handleDelete(q.id, e)}
                 >

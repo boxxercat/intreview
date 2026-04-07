@@ -8,6 +8,14 @@ import { useCallback, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { getStoredUserId } from "@/lib/authApi"
 import {
+  uiErrorBanner,
+  uiInput,
+  uiListShell,
+  uiPageTitle,
+  uiPanel,
+} from "@/lib/ui"
+import { cn } from "@/lib/utils"
+import {
   type InterviewSummary,
   createInterview,
   deleteInterview,
@@ -123,7 +131,7 @@ export default function InterviewsPage() {
   if (!hasUser) {
     return (
       <div className="space-y-4 text-sm">
-        <h1 className="text-xl font-semibold">Interview List</h1>
+        <h1 className={uiPageTitle}>면접 기록</h1>
         <p className="text-muted-foreground">로그인 후 이용할 수 있습니다.</p>
         <Button asChild>
           <Link href="/login">로그인</Link>
@@ -133,25 +141,23 @@ export default function InterviewsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div>
-        <h1 className="text-xl font-semibold">Interview List</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className={uiPageTitle}>면접 기록</h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
           총 {pageInfo?.totalElements ?? "—"}건
         </p>
       </div>
 
-      {error ? (
-        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
+      {error ? <p className={cn(uiErrorBanner, "text-sm")}>{error}</p> : null}
 
-      <section className="space-y-3 rounded-md border border-border p-4">
-        <h2 className="text-sm font-medium">새 면접 등록</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
+      <section className={cn(uiPanel, "space-y-4")}>
+        <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+          새 면접
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="iv-company" className="text-xs text-muted-foreground">
+            <label htmlFor="iv-company" className="text-xs font-medium text-muted-foreground">
               회사명
             </label>
             <input
@@ -160,11 +166,11 @@ export default function InterviewsPage() {
               onChange={(e) => setCompanyName(e.target.value)}
               maxLength={120}
               disabled={creating}
-              className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+              className={cn("mt-1.5", uiInput)}
             />
           </div>
           <div>
-            <label htmlFor="iv-position" className="text-xs text-muted-foreground">
+            <label htmlFor="iv-position" className="text-xs font-medium text-muted-foreground">
               직무
             </label>
             <input
@@ -173,11 +179,11 @@ export default function InterviewsPage() {
               onChange={(e) => setPositionTitle(e.target.value)}
               maxLength={120}
               disabled={creating}
-              className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+              className={cn("mt-1.5", uiInput)}
             />
           </div>
           <div>
-            <label htmlFor="iv-date" className="text-xs text-muted-foreground">
+            <label htmlFor="iv-date" className="text-xs font-medium text-muted-foreground">
               면접일
             </label>
             <input
@@ -186,11 +192,11 @@ export default function InterviewsPage() {
               value={interviewDate}
               onChange={(e) => setInterviewDate(e.target.value)}
               disabled={creating}
-              className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+              className={cn("mt-1.5", uiInput)}
             />
           </div>
           <div>
-            <label htmlFor="iv-round" className="text-xs text-muted-foreground">
+            <label htmlFor="iv-round" className="text-xs font-medium text-muted-foreground">
               면접 구분 (선택)
             </label>
             <input
@@ -200,7 +206,7 @@ export default function InterviewsPage() {
               onChange={(e) => setInterviewRound(e.target.value)}
               maxLength={2000}
               disabled={creating}
-              className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+              className={cn("mt-1.5", uiInput)}
             />
           </div>
         </div>
@@ -216,21 +222,23 @@ export default function InterviewsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-medium">목록</h2>
+        <h2 className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">
+          목록
+        </h2>
         {loading ? (
           <p className="text-sm text-muted-foreground">불러오는 중…</p>
         ) : list.length === 0 ? (
           <p className="text-sm text-muted-foreground">등록된 면접이 없습니다.</p>
         ) : (
-          <ul className="divide-y divide-border rounded-md border border-border">
+          <ul className={cn(uiListShell, "divide-y divide-border/80")}>
             {list.map((it) => (
               <li key={it.id} className="relative p-4">
                 <Link
                   href={`/interviews/${it.id}`}
-                  className="block min-w-0 pr-10 hover:underline"
+                  className="block min-w-0 pr-10 transition-colors hover:bg-muted/30"
                 >
-                  <p className="font-medium">{it.companyName}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-medium text-foreground">{it.companyName}</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
                     {it.positionTitle} · {it.interviewDate}
                     {it.interviewRound.trim()
                       ? ` · ${it.interviewRound.trim()}`
@@ -241,7 +249,9 @@ export default function InterviewsPage() {
                   type="button"
                   variant="ghost"
                   size="icon-sm"
-                  className="absolute right-2 top-2 z-10 text-black hover:bg-muted dark:text-neutral-100"
+                  className={cn(
+                    "absolute right-2 top-2 z-10 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                  )}
                   aria-label="삭제"
                   onClick={(e) => void handleDelete(it.id, e)}
                 >
