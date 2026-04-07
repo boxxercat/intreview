@@ -105,7 +105,6 @@ export function InterviewDetailView({ interviewId }: Props) {
   const [prepList, setPrepList] = useState<PreparationQuestion[]>([])
   const [prepLoading, setPrepLoading] = useState(false)
   const [prepDraft, setPrepDraft] = useState("")
-  const [prepPractice, setPrepPractice] = useState("")
   const [prepBankPick, setPrepBankPick] = useState<QuestionBankSummary | null>(
     null
   )
@@ -322,11 +321,10 @@ export function InterviewDetailView({ interviewId }: Props) {
         await createPreparationQuestion({
           sourceType: "FROM_BANK",
           questionBankQuestionId: prepBankPick.id,
-          practiceAnswer: prepPractice.trim() || null,
+          practiceAnswer: null,
         })
         setPrepBankPick(null)
         setPrepDraft("")
-        setPrepPractice("")
       } else {
         const t = prepDraft.trim()
         if (!t) {
@@ -336,10 +334,9 @@ export function InterviewDetailView({ interviewId }: Props) {
         await createPreparationQuestion({
           sourceType: "CUSTOM",
           questionTextSnapshot: t,
-          practiceAnswer: prepPractice.trim() || null,
+          practiceAnswer: null,
         })
         setPrepDraft("")
-        setPrepPractice("")
       }
       await fetchPrep()
     } catch (e) {
@@ -658,19 +655,6 @@ export function InterviewDetailView({ interviewId }: Props) {
               </span>
             ) : null}
           </div>
-          <Field>
-            <FieldLabel className="text-xs font-normal text-muted-foreground">
-              연습 답변
-            </FieldLabel>
-            <Textarea
-              value={prepPractice}
-              onChange={(e) => setPrepPractice(e.target.value)}
-              placeholder="연습 답변"
-              maxLength={8000}
-              rows={3}
-              disabled={prepSubmitting}
-            />
-          </Field>
           <Button
             type="button"
             size="sm"
